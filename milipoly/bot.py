@@ -10,28 +10,26 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import (
     CallbackQuery,
     ChatMemberUpdated,
-    ChosenInlineResult,
     ErrorEvent,
-    InlineQuery,
     Message,
     Update,
 )
 from aiogram.utils.token import TokenValidationError
 from loguru import logger
-from maubot.config import config, default
-from maubot.handlers import ROUTERS
-from maubot.uno.session import SessionManager
 from tortoise import Tortoise
+
+from milipoly.config import config, default
+from milipoly.handlers import ROUTERS
+from milipoly.milipoly.session import SessionManager
 
 # Константы
 # =========
 
-# TODO: Use session manager
-# sm = SessionManager()
+sm = SessionManager()
 
 dp = Dispatcher(
     # Добавляем менеджер игровых сессия в бота
-    # sm=sm
+    sm=sm
 )
 
 # Настраиваем формат отображения логов loguru
@@ -45,32 +43,29 @@ LOG_FORMAT = (
 # Middleware
 # ==========
 
-# @dp.message.middleware()
-# @dp.chat_member.middleware()
-# @dp.chosen_inline_result.middleware()
-# async def game_middleware(
-#     handler: Callable[[Update, dict[str, Any]], Awaitable[Any]],
-#     event: Update,
-#     data: dict[str, Any]
-# ):
-#     """Предоставляет экземпляр игры в обработчики сообщений."""
-#     if isinstance(event, (Message, ChatMemberUpdated)):
-#         game = sm.games.get(event.chat.id)
-#     elif isinstance(event, CallbackQuery):
-#         if event.message is None:
-#             chat_id = sm.user_to_chat.get(event.from_user.id)
-#             game = None if chat_id is None else sm.games.get(chat_id)
-#         else:
-#             game = sm.games.get(event.message.chat.id)
-#     elif isinstance(event, (InlineQuery, ChosenInlineResult)):
-#         chat_id = sm.user_to_chat.get(event.from_user.id)
-#         game = None if chat_id is None else sm.games.get(chat_id)
+@dp.message.middleware()
+@dp.callback_query.middleware()
+@dp.chat_member.middleware()
+async def game_middleware(
+    handler: Callable[[Update, dict[str, Any]], Awaitable[Any]],
+    event: Update,
+    data: dict[str, Any]
+):
+    """Предоставляет экземпляр игры в обработчики сообщений."""
+    if isinstance(event, (Message, ChatMemberUpdated)):
+        game = sm.games.get(event.chat.id)
+    elif isinstance(event, CallbackQuery):
+        if event.message is None:
+            chat_id = sm.user_to_chat.get(event.from_user.id)
+            game = None if chat_id is None else sm.games.get(chat_id)
+        else:
+            game = sm.games.get(event.message.chat.id)
 
-#     data["game"] = game
-#     data["player"] = None if game is None else game.get_player(
-#         event.from_user.id
-#     )
-#     return await handler(event, data)
+    data["game"] = game
+    data["player"] = None if game is None else game.get_player(
+        event.from_user.id
+    )
+    return await handler(event, data)
 
 @dp.errors()
 async def catch_errors(event: ErrorEvent):
