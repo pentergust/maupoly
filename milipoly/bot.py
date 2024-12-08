@@ -101,6 +101,7 @@ async def main():
             token=config.token.get_secret_value(),
             default=default
         )
+        sm.bot = bot
     except TokenValidationError as e:
         logger.error(e)
         logger.info("Check your bot token in .env file.")

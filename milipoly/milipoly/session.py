@@ -1,5 +1,6 @@
 """Хранилище игровых сессий."""
 
+from aiogram import Bot
 from loguru import logger
 
 from milipoly.milipoly.exceptions import (
@@ -17,9 +18,10 @@ class SessionManager:
     Предоставляет методы для создания и завершения сессий.
     """
 
-    def __init__(self):
+    def __init__(self, bot: Bot):
         self.games: dict[str, MonoGame] = {}
         self.user_to_chat: dict[int, int] = {}
+        self.bot: Bot = bot
 
 
     # Управление игроками в сессии
@@ -72,7 +74,7 @@ class SessionManager:
     def create(self, chat_id: int) -> MonoGame:
         """Создает новую игру в чате."""
         logger.info("Create new session in chat {}", chat_id)
-        game = MonoGame(chat_id)
+        game = MonoGame(chat_id, self.bot)
         self.games[chat_id] = game
         return game
 
