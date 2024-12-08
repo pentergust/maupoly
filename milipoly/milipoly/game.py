@@ -12,6 +12,7 @@ class MonoGame:
     def __init__(self, chat_id: int, bot: Bot):
         self.chat_id = chat_id
         self.bot: Bot = bot
+        self.lobby_message = None
         self.journal = Journal(self, self.bot)
 
         # Игроки
