@@ -27,10 +27,7 @@ from milipoly.milipoly.session import SessionManager
 
 sm = SessionManager()
 
-dp = Dispatcher(
-    # Добавляем менеджер игровых сессия в бота
-    sm=sm
-)
+dp = Dispatcher(sm=sm)
 
 # Настраиваем формат отображения логов loguru
 # Обратите внимание что в проекте помимо loguru используется logging
