@@ -4,7 +4,7 @@
 большей гибкости.
 """
 
-from milipoly.handlers import session, simple_commands, player
+from milipoly.handlers import session, simple_commands, player, turn
 
 # Список всех работающих роутеров
 # Роутеры из этого списка будут включены в диспетчер бота
@@ -14,7 +14,7 @@ ROUTERS = (
     simple_commands.router,
     session.router,
     player.router,
-    # turn.router
+    turn.router
 )
 
 __all__ = ("ROUTERS",)

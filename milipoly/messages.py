@@ -119,9 +119,9 @@ def get_room_players(game: MonoGame) -> str:
     players_list = f"✨ Игроки ({len(game.players)}):\n"
     for i, player in enumerate(game.players):
         if i == game.current_player:
-            players_list += f"- <b>{player.user.mention_html()}</b> "
+            players_list += f"- <b>{player.user.mention_html()}</b>\n"
         else:
-            players_list += f"- {player.user.mention_html()}"
+            players_list += f"- {player.user.mention_html()}\n"
     return players_list
 
 
