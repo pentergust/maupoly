@@ -5,8 +5,6 @@
 в роутер `player`.
 """
 
-
-
 from aiogram import Bot, F, Router
 from aiogram.filters import Command
 
@@ -249,48 +247,4 @@ async def start_game_call(query: CallbackQuery, game: MonoGame | None):
     game.journal.set_markup(keyboards.TURN_MARKUP)
     await game.journal.send_journal()
 
-
-# Настройки комнаты
-# =================
-
 # TODO: Настройки игры, если такое вообще будет
-# @router.message(Command("settings"))
-# async def settings_menu(message: Message, game: MonoGame | None):
-#     """Отображает настройки для текущей комнаты."""
-#     if game is None:
-#         return await message.answer(messages.NO_ROOM_MESSAGE)
-
-#     await message.answer(ROOM_SETTINGS,
-#         reply_markup=keyboards.get_settings_markup(game.rules)
-#     )
-
-# @router.callback_query(F.data=="room_settings")
-# async def settings_menu_call(query: CallbackQuery, game: MonoGame | None):
-#     """Отображает настройки для текущей комнаты."""
-#     if game is None:
-#         return await query.message.answer(messages.NO_ROOM_MESSAGE)
-
-#     await query.message.answer(ROOM_SETTINGS,
-#         reply_markup=keyboards.get_settings_markup(game.rules)
-#     )
-#     await query.answer()
-
-# class SettingsCallback(CallbackData, prefix="set"):
-#     """Переключатель настроек."""
-
-#     key: str
-#     value: bool
-
-# @router.callback_query(SettingsCallback.filter())
-# async def edit_room_settings_call(query: CallbackQuery,
-#     callback_data: SettingsCallback,
-#     game: MonoGame | None
-# ):
-#     """Изменяет настройки для текущей комнаты."""
-#     if game is None:
-#         return await query.message.answer(messages.NO_ROOM_MESSAGE)
-
-#     setattr(game.rules, callback_data.key, callback_data.value)
-#     await query.message.edit_text(ROOM_SETTINGS,
-#         reply_markup=keyboards.get_settings_markup(game.rules)
-#     )
