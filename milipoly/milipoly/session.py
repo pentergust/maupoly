@@ -18,10 +18,10 @@ class SessionManager:
     Предоставляет методы для создания и завершения сессий.
     """
 
-    def __init__(self, bot: Bot):
+    def __init__(self):
         self.games: dict[str, MonoGame] = {}
         self.user_to_chat: dict[int, int] = {}
-        self.bot: Bot = bot
+        self.bot: Bot = None
 
 
     # Управление игроками в сессии

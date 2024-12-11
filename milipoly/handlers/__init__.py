@@ -4,16 +4,16 @@
 большей гибкости.
 """
 
-from milipoly.handlers import session, simple_commands, user
+from milipoly.handlers import session, simple_commands, player
 
 # Список всех работающих роутеров
 # Роутеры из этого списка будут включены в диспетчер бота
 ROUTERS = (
     # Основная информация о пользователе
-    user.router,
+    # user.router,
     simple_commands.router,
     session.router,
-    # player.router,
+    player.router,
     # turn.router
 )
 

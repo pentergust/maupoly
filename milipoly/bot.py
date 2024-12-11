@@ -112,7 +112,7 @@ async def main():
     logger.info("Init db connection ...")
     await Tortoise.init(
         db_url=config.db_url,
-        modules={"models": ["maubot.db"]}
+        modules={"models": ["milipoly.db"]}
     )
     await Tortoise.generate_schemas()
 
