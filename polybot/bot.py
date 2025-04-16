@@ -16,11 +16,10 @@ from aiogram.types import (
 )
 from aiogram.utils.token import TokenValidationError
 from loguru import logger
-from tortoise import Tortoise
 
+from maupoly.session import SessionManager
 from polybot.config import config, default
 from polybot.handlers import ROUTERS
-from maupoly.session import SessionManager
 
 # Константы
 # =========
@@ -78,9 +77,9 @@ async def catch_errors(event: ErrorEvent):
 async def main():
     """Запускает бота.
 
-    Настраивает логгирование.
+    Настраивает журнал
     Загружает все необходимые обработчики.
-    После запускает лонг поллинг.
+    После запускает обработку событий.
     """
     logger.remove()
     logger.add(
@@ -108,13 +107,6 @@ async def main():
     for router in ROUTERS:
         dp.include_router(router)
         logger.debug("Include router {}", router.name)
-
-    logger.info("Init db connection ...")
-    await Tortoise.init(
-        db_url=config.db_url,
-        modules={"models": ["polybot.db"]}
-    )
-    await Tortoise.generate_schemas()
 
     logger.success("Start polling!")
     await dp.start_polling(bot)

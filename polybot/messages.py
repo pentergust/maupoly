@@ -6,8 +6,8 @@
 
 from datetime import datetime
 
-from polybot.config import config
 from maupoly.game import MonoGame
+from polybot.config import config
 
 # Статические сообщения
 # =====================

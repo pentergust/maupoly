@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from polybot.config import config
 from maupoly.game import MonoGame
+from polybot.config import config
 
 TURN_MARKUP = InlineKeyboardMarkup(inline_keyboard=[[
     InlineKeyboardButton(

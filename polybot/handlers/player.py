@@ -13,13 +13,6 @@ from aiogram.filters import (
 from aiogram.types import CallbackQuery, ChatMemberUpdated, Message
 from loguru import logger
 
-from polybot import keyboards, messages
-from polybot.messages import (
-    NO_ROOM_MESSAGE,
-    NOT_ENOUGH_PLAYERS,
-    get_closed_room_message,
-    get_room_status,
-)
 from maupoly.exceptions import (
     AlreadyJoinedError,
     DeckEmptyError,
@@ -28,6 +21,13 @@ from maupoly.exceptions import (
 )
 from maupoly.game import MonoGame
 from maupoly.session import SessionManager
+from polybot import keyboards, messages
+from polybot.messages import (
+    NO_ROOM_MESSAGE,
+    NOT_ENOUGH_PLAYERS,
+    get_closed_room_message,
+    get_room_status,
+)
 
 router = Router(name="Player")
 

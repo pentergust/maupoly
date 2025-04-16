@@ -5,7 +5,11 @@ from aiogram import Bot
 from loguru import logger
 
 from maupoly.enums import GameState
-from maupoly.exceptions import AlreadyJoinedError, LobbyClosedError, NoGameInChatError
+from maupoly.exceptions import (
+    AlreadyJoinedError,
+    LobbyClosedError,
+    NoGameInChatError,
+)
 from maupoly.field import CLASSIC_BOARD
 from maupoly.journal import Journal
 from maupoly.player import Player

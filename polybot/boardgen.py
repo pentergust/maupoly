@@ -1,6 +1,6 @@
-from time import time
 import io
 from pathlib import Path
+from time import time
 from typing import NamedTuple
 
 from aiogram.types import BufferedInputFile

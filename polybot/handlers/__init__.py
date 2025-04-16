@@ -4,7 +4,7 @@
 большей гибкости.
 """
 
-from polybot.handlers import session, simple_commands, player, turn
+from polybot.handlers import player, session, simple_commands, turn
 
 # Список всех работающих роутеров
 # Роутеры из этого списка будут включены в диспетчер бота

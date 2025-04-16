@@ -5,9 +5,9 @@ from random import randint
 from aiogram import F, Router
 from aiogram.types import CallbackQuery
 
-from polybot import keyboards
 from maupoly.game import MonoGame
 from maupoly.player import Player
+from polybot import keyboards
 
 router = Router(name="Turn")
 
