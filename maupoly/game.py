@@ -1,40 +1,40 @@
 from datetime import datetime
 from random import shuffle
 
-from aiogram import Bot
 from loguru import logger
 
-from maupoly.enums import GameState
+from maupoly.enums import TurnState
+from maupoly.events import BaseEventHandler, Event, GameEvents
 from maupoly.exceptions import (
     AlreadyJoinedError,
     LobbyClosedError,
     NoGameInChatError,
 )
-from maupoly.field import CLASSIC_BOARD
-from maupoly.journal import Journal
-from maupoly.player import Player
+from maupoly.field import CLASSIC_BOARD, BaseField
+from maupoly.player import BaseUser, Player
 
 
 # TODO: Написать класс игры
 class MonoGame:
-    def __init__(self, chat_id: int, bot: Bot):
-        self.chat_id = chat_id
-        self.bot: Bot = bot
-        self.lobby_message = None
-        self.journal = Journal(self, self.bot)
+    def __init__(
+        self, journal: BaseEventHandler, room_id: str, owner: BaseUser
+    ) -> None:
+        self.room_id = room_id
+        self.event_handler: BaseEventHandler = journal
 
         # Игроки
         self.current_player: int = 0
-        self.start_player = None
-        self.players = []
-        self.bankrupts = []
-        self.winner = None
+        self.owner = Player(self, owner.id, owner.name)
+        self.players: list[Player] = [self.owner]
+        self.bankrupts: list[Player] = []
+        self.winner: Player | None = None
 
         # Состояние игры
         self.started: bool = False
         self.open: bool = True
         self.dice = 0
-        self.fields = []
+        self.state: TurnState = TurnState.NEXT
+        self.fields: list[BaseField] = []
         self.round_counter = 0
 
         # Таймеры
@@ -44,16 +44,30 @@ class MonoGame:
     @property
     def player(self) -> Player:
         """Возвращает текущего игрока."""
+        if len(self.players) == 0:
+            raise ValueError("Game not started to get players")
         return self.players[self.current_player % len(self.players)]
 
-    def get_player(self, user_id: int) -> Player | None:
+    def get_player(self, user_id: str) -> Player | None:
         """Получает игрока среди списка игроков по его ID."""
         for player in self.players:
-            if player.user.id == user_id:
+            if player.user_id == user_id:
                 return player
+
         return None
 
-    def new_game(self):
+    def push_event(
+        self, from_player: Player, event_type: GameEvents, data: str = ""
+    ) -> None:
+        """Обёртка над методом journal.push.
+
+        Автоматически подставляет текущую игру.
+        """
+        self.event_handler.push(
+            Event(self.room_id, from_player, event_type, data, self)
+        )
+
+    def start(self):
         logger.info("Start new game in chat {}", self.chat_id)
         self.winner = None
         self.bankrupts.clear()
@@ -64,26 +78,30 @@ class MonoGame:
         self.fields.clear()
         self.fields = CLASSIC_BOARD.copy()
         self.round_counter = 0
+        self.state = TurnState.NEXT
         self.game_start = datetime.now()
         self.turn_start = datetime.now()
+        self.push_event(self.owner, GameEvents.GAME_START)
 
     def end(self) -> None:
         """Завершает текущую игру."""
         self.players.clear()
         self.started = False
+        self.push_event(self.owner, GameEvents.GAME_END)
 
     def process_turn(self, dice: int) -> None:
         cur_player = self.player
+        self.push_event(cur_player, GameEvents.GAME_DICE, str(dice))
         cur_player.index = (cur_player.index + dice) % len(self.fields)
 
     def next_turn(self) -> None:
         logger.info("Next Player")
-        self.state = GameState.PREDICE
+        self.state = TurnState.PRE_DICE
         self.turn_start = datetime.now()
-        self.journal.clear()
         self.skip_players()
+        self.push_event(self.player, GameEvents.GAME_TURN)
 
-    def add_player(self, user) -> None:
+    def add_player(self, user: BaseUser) -> Player:
         """Добавляет игрока в игру."""
         logger.info("Joining {} in game with id {}", user, self.chat_id)
         if not self.open:
@@ -93,29 +111,37 @@ class MonoGame:
         if player is not None:
             raise AlreadyJoinedError()
 
-        player = Player(self, user)
+        player = Player(self, user.id, user.name)
+        # TODO: Хук для старта
         self.players.append(player)
+        self.push_event(player, GameEvents.GAME_JOIN)
+        return player
 
-    def remove_player(self, user_id: int) -> None:
+    def remove_player(self, player: Player) -> None:
         """Удаляет пользователя из игры."""
-        logger.info("Leaving {} game with id {}", user_id, self.chat_id)
-
-        player = self.get_player(user_id)
+        logger.info("Leaving {} game with id {}", player, self.room_id)
         if player is None:
-            raise NoGameInChatError()
+            # TODO: Тту должно быть более конкретное исключение
+            raise NoGameInChatError
 
-        if player == self.player:
-            self.next_turn()
-
-        if len(player.balance) == 0:
-            self.bankrupts.append(player)
-        else:
+        if player.balance >= 0:
             self.winner = player
+            self.push_event(player, GameEvents.GAME_LEAVE, "win")
+            self.end()
+        else:
+            self.bankrupts.append(player)
+            self.push_event(player, GameEvents.GAME_LEAVE, "lose")
 
-        player.on_leave()
+        # TODO: Хук на выход из игры
+        # player.on_leave()
         self.players.remove(player)
 
         if len(self.players) <= 1:
+            # Если игрок сам вышел/проиграл. другие побеждают
+            if self.started and player == self.player:
+                self.winners = self.players[0]
+            else:
+                self.bankrupts.extend(self.players)
             self.end()
 
     def skip_players(self, n: int = 1) -> None:
@@ -127,4 +153,5 @@ class MonoGame:
             n (int): Сколько игроков пропустить (1).
 
         """
+        self.push_event(self.player, GameEvents.GAME_NEXT, str(n))
         self.current_player = (self.current_player + n) % len(self.players)

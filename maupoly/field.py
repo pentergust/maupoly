@@ -7,6 +7,7 @@ from enum import IntEnum
 # Вспомогательные классы для игры
 # ===============================
 
+
 class FieldType(IntEnum):
     BUY = 0
     RENT = 1
@@ -17,6 +18,7 @@ class FieldType(IntEnum):
     TELEPORT = 6
     PRISON = 7
     CASINO = 8
+
 
 class FieldColor(IntEnum):
     BROWN = 0
@@ -32,30 +34,31 @@ class FieldColor(IntEnum):
 # Игровые поля
 # ============
 
+
 class BaseField:
-    def __init__(self, field_type: FieldType, name: str):
+    def __init__(self, field_type: FieldType, name: str) -> None:
         self.type = field_type
         self.name = name
 
-    def field_callback(self, game):
+    def field_callback(self, game) -> None:
         raise NotImplementedError
 
     # Магические методы
     # =================
 
-    def __call__(self, game):
-        return self.field_callback(game)
+    def __call__(self, game) -> None:
+        self.field_callback(game)
 
 
 class BuyField(BaseField):
-    def __init__(self, name: str, cost: int, reward: bool = False):
+    def __init__(self, name: str, cost: int, reward: bool = False) -> None:
         super().__init__(field_type=FieldType.BUY, name=name)
         self.cost = cost
         self.reward = reward
 
 
 class RentField(BaseField):
-    def __init__(self, name: str, color: FieldColor):
+    def __init__(self, name: str, color: FieldColor) -> None:
         super().__init__(field_type=FieldType.RENT, name=name)
         self.color = color
         self.buy_cost = None
@@ -69,41 +72,41 @@ class RentField(BaseField):
 
 
 class AirportField(BaseField):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(field_type=FieldType.AIRPORT, name=name)
 
 
 class CommunicateField(BaseField):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(field_type=FieldType.AIRPORT, name=name)
 
 
 class ChanceField(BaseField):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(field_type=FieldType.AIRPORT, name="Шанс")
 
 
 class PrizeField(BaseField):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(
-            field_type=FieldType.AIRPORT,
-            name="Общественная казна"
+            field_type=FieldType.AIRPORT, name="Общественная казна"
         )
 
 
 class TeleportField(BaseField):
-    def __init__(self, name: str):
+    def __init__(self, name: str) -> None:
         super().__init__(field_type=FieldType.AIRPORT, name=name)
 
 
 class PrisonField(BaseField):
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__(field_type=FieldType.AIRPORT, name="Тюрьма")
 
-class CasinoField(BaseField):
 
-    def __init__(self):
+class CasinoField(BaseField):
+    def __init__(self) -> None:
         super().__init__(field_type=FieldType.CASINO, name="Казино")
+
 
 # Игровые поля
 # ============
