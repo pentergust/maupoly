@@ -6,8 +6,8 @@
 
 from datetime import datetime
 
-from milipoly.config import config
-from milipoly.milipoly.game import MonoGame
+from polybot.config import config
+from maupoly.game import MonoGame
 
 # Статические сообщения
 # =====================
@@ -27,10 +27,10 @@ HELP_MESSAGE = (
 # Рассказывает об авторстве проекта и новостном канале
 STATUS_MESSAGE = (
     "🌟 <b>Информация о боте</b>:\n\n"
-    "<b>Milipoly</b> - Telegram бот с открытым исходным кодом, позволяющий "
+    "<b>polybot</b> - Telegram бот с открытым исходным кодом, позволяющий "
     "пользователям играть в Монополию с друзьями в групповых чатах.\n"
     "Исходный код проекта доступен в "
-    "<a href='https://codeberg.org/salormoont/milipoly'>Codeberg</a>.\n"
+    "<a href='https://codeberg.org/salormoont/polybot'>Codeberg</a>.\n"
     "🍓 Мы будем очень рады если вы внесёте свой вклад в развитие бота.\n\n"
     "Узнать о всех новостях проекта вы можете в Telegram канале "
     "<a href='https://t.me/mili_qlaster'>Salorhard</a>."

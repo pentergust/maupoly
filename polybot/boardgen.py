@@ -6,7 +6,7 @@ from typing import NamedTuple
 from aiogram.types import BufferedInputFile
 from PIL import Image
 
-from milipoly.milipoly.game import MonoGame
+from maupoly.game import MonoGame
 
 # Коллекция асетов изображений
 ASSETS_PATH = Path("assets/")

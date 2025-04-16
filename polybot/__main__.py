@@ -1,13 +1,13 @@
 """Запускает бота.
 
 ```
-py -m milipoly
+py -m polybot
 ```
 """
 
 import asyncio
 
-from milipoly.bot import main
+from polybot.bot import main
 
 if __name__ == "__main__":
     asyncio.run(main())

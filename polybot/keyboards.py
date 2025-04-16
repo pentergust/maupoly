@@ -1,7 +1,7 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from milipoly.config import config
-from milipoly.milipoly.game import MonoGame
+from polybot.config import config
+from maupoly.game import MonoGame
 
 TURN_MARKUP = InlineKeyboardMarkup(inline_keyboard=[[
     InlineKeyboardButton(

@@ -3,12 +3,12 @@
 from aiogram import Bot
 from loguru import logger
 
-from milipoly.milipoly.exceptions import (
+from maupoly.exceptions import (
     LobbyClosedError,
     NoGameInChatError,
 )
-from milipoly.milipoly.game import MonoGame
-from milipoly.milipoly.player import Player
+from maupoly.game import MonoGame
+from maupoly.player import Player
 
 
 class SessionManager:

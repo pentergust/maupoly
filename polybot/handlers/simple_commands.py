@@ -5,7 +5,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from loguru import logger
 
-from milipoly.messages import HELP_MESSAGE, STATUS_MESSAGE
+from polybot.messages import HELP_MESSAGE, STATUS_MESSAGE
 
 router = Router(name="simple commands")
 

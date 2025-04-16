@@ -11,7 +11,7 @@ from aiogram import Bot
 from aiogram.types import InlineKeyboardMarkup, Message
 
 if TYPE_CHECKING:
-    from milipoly.milipoly import MonoGame
+    from maupoly import MonoGame
 
 # Вспомогательные классы
 # ======================

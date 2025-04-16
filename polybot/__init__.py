@@ -1,4 +1,4 @@
-"""Simple Telegram bot to play Milipoly with your friends in group chats.
+"""Simple Telegram bot to play polybot with your friends in group chats.
 
 Команды бота:
 game - Создать игровую комнату

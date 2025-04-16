@@ -18,9 +18,9 @@ from aiogram.utils.token import TokenValidationError
 from loguru import logger
 from tortoise import Tortoise
 
-from milipoly.config import config, default
-from milipoly.handlers import ROUTERS
-from milipoly.milipoly.session import SessionManager
+from polybot.config import config, default
+from polybot.handlers import ROUTERS
+from maupoly.session import SessionManager
 
 # Константы
 # =========
@@ -112,7 +112,7 @@ async def main():
     logger.info("Init db connection ...")
     await Tortoise.init(
         db_url=config.db_url,
-        modules={"models": ["milipoly.db"]}
+        modules={"models": ["polybot.db"]}
     )
     await Tortoise.generate_schemas()
 

@@ -13,21 +13,21 @@ from aiogram.filters import (
 from aiogram.types import CallbackQuery, ChatMemberUpdated, Message
 from loguru import logger
 
-from milipoly import keyboards, messages
-from milipoly.messages import (
+from polybot import keyboards, messages
+from polybot.messages import (
     NO_ROOM_MESSAGE,
     NOT_ENOUGH_PLAYERS,
     get_closed_room_message,
     get_room_status,
 )
-from milipoly.milipoly.exceptions import (
+from maupoly.exceptions import (
     AlreadyJoinedError,
     DeckEmptyError,
     LobbyClosedError,
     NoGameInChatError,
 )
-from milipoly.milipoly.game import MonoGame
-from milipoly.milipoly.session import SessionManager
+from maupoly.game import MonoGame
+from maupoly.session import SessionManager
 
 router = Router(name="Player")
 

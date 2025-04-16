@@ -4,11 +4,11 @@ from random import shuffle
 from aiogram import Bot
 from loguru import logger
 
-from milipoly.milipoly.enums import GameState
-from milipoly.milipoly.exceptions import AlreadyJoinedError, LobbyClosedError, NoGameInChatError
-from milipoly.milipoly.field import CLASSIC_BOARD
-from milipoly.milipoly.journal import Journal
-from milipoly.milipoly.player import Player
+from maupoly.enums import GameState
+from maupoly.exceptions import AlreadyJoinedError, LobbyClosedError, NoGameInChatError
+from maupoly.field import CLASSIC_BOARD
+from maupoly.journal import Journal
+from maupoly.player import Player
 
 
 # TODO: Написать класс игры

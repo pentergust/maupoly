@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "milipoly"
+name = "polybot"
 version = "0.1.0"
-description = "Play Milipoly with your friends in Telegram chats"
+description = "Play polybot with your friends in Telegram chats"
 authors = ["Milinuri Nirvalen <pentergust@mail.ru>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"

@@ -12,11 +12,11 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
-from milipoly import keyboards, messages
-from milipoly.config import config
-from milipoly.milipoly.exceptions import NoGameInChatError
-from milipoly.milipoly.game import MonoGame
-from milipoly.milipoly.session import SessionManager
+from polybot import keyboards, messages
+from polybot.config import config
+from maupoly.exceptions import NoGameInChatError
+from maupoly.game import MonoGame
+from maupoly.session import SessionManager
 
 router = Router(name="Sessions")
 
