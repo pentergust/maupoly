@@ -4,7 +4,8 @@
 """
 
 import sys
-from typing import Any, Awaitable, Callable
+from collections.abc import Awaitable, Callable
+from typing import Any
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import (
@@ -17,14 +18,11 @@ from aiogram.types import (
 from aiogram.utils.token import TokenValidationError
 from loguru import logger
 
-from maupoly.session import SessionManager
-from polybot.config import config, default
+from polybot.config import config, default, sm
 from polybot.handlers import ROUTERS
 
 # Константы
 # =========
-
-sm = SessionManager()
 
 dp = Dispatcher(sm=sm)
 
@@ -39,16 +37,17 @@ LOG_FORMAT = (
 # Middleware
 # ==========
 
+
 @dp.message.middleware()
 @dp.callback_query.middleware()
 @dp.chat_member.middleware()
 async def game_middleware(
     handler: Callable[[Update, dict[str, Any]], Awaitable[Any]],
     event: Update,
-    data: dict[str, Any]
-):
+    data: dict[str, Any],
+) -> Awaitable[Any]:
     """Предоставляет экземпляр игры в обработчики сообщений."""
-    if isinstance(event, (Message, ChatMemberUpdated)):
+    if isinstance(event, Message | ChatMemberUpdated):
         game = sm.games.get(event.chat.id)
     elif isinstance(event, CallbackQuery):
         if event.message is None:
@@ -58,23 +57,24 @@ async def game_middleware(
             game = sm.games.get(event.message.chat.id)
 
     data["game"] = game
-    data["player"] = None if game is None else game.get_player(
-        event.from_user.id
+    data["player"] = (
+        None if game is None else game.get_player(event.from_user.id)
     )
     return await handler(event, data)
 
+
 @dp.errors()
-async def catch_errors(event: ErrorEvent):
+async def catch_errors(event: ErrorEvent) -> None:
     """Простой обработчик для ошибок."""
     logger.warning(event)
     logger.exception(event.exception)
-    # await event.update.message.answer("Что-то явно пошло не по плану.")
 
 
 # Главная функция запуска бота
 # ============================
 
-async def main():
+
+async def main() -> None:
     """Запускает бота.
 
     Настраивает журнал
@@ -82,10 +82,7 @@ async def main():
     После запускает обработку событий.
     """
     logger.remove()
-    logger.add(
-        sys.stdout,
-        format=LOG_FORMAT
-    )
+    logger.add(sys.stdout, format=LOG_FORMAT)
 
     logger.info("Check config")
     logger.debug("Token: {}", config.token)
@@ -93,10 +90,7 @@ async def main():
 
     logger.info("Setup bot ...")
     try:
-        bot = Bot(
-            token=config.token.get_secret_value(),
-            default=default
-        )
+        bot = Bot(token=config.token.get_secret_value(), default=default)
         sm.bot = bot
     except TokenValidationError as e:
         logger.error(e)

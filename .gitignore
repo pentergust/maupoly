@@ -1,6 +1,3 @@
-# Config file
-config.json
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -72,10 +69,5 @@ target/
 # Helm resources
 chart/charts
 
-# Database file
-uno.sqlite3
-data/
-
-images/api_auth.json
-images/sticker_config.json
-images/sticker_uploader.session
+# Project files
+.env

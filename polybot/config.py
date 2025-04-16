@@ -8,35 +8,37 @@
 from pathlib import Path
 
 from aiogram.client.default import DefaultBotProperties
-from loguru import logger
 from pydantic import BaseModel, SecretStr
+from pydantic_settings import SettingsConfigDict
+
+from maupoly.session import SessionManager
 
 # Общие настройки бота
 # ====================
 
-CONFIG_PATh = Path("config.json")
 
 class Config(BaseModel):
-    """Общие настройки для Telegram бота, касающиеся Uno."""
+    """Общие настройки для Telegram бота, касающиеся игры.
 
-    token: SecretStr
-    admin_list: list[int]
-    db_url: str = "sqlite://poly.sqlite"
-    open_lobby: bool = True
-    min_players: int = 2
+    - telegram_token: Токен от Telegram бота.
+    - assets_path: Путь к директории с игровыми асетами (поле).
+    """
 
-try:
-    with open(CONFIG_PATh) as f:
-        config: Config = Config.model_validate_json(f.read())
-except FileNotFoundError as e:
-    logger.error(e)
-    logger.info("Copy config.json.sample, then edit it")
+    telegram_token: SecretStr
+    assets_path: Path
+
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="allow"
+    )
+
+
+config: Config = Config()  # type: ignore
 
 
 # Параметры по умолчанию для бота aiogram
 # =======================================
 
 # Настройки бота по умолчанию
-default = DefaultBotProperties(
-    parse_mode="html"
-)
+default = DefaultBotProperties(parse_mode="html")
+# FIXME: Аннотации типов не хватает немного
+sm = SessionManager()

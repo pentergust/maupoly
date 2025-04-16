@@ -9,6 +9,7 @@ dependencies = [
     "aiogram>=3.20.0",
     "loguru>=0.7.3",
     "pillow>=11.2.1",
+    "pydantic-settings>=2.8.1",
 ]
 
 
