@@ -68,7 +68,7 @@ class MonoGame:
         )
 
     def start(self):
-        logger.info("Start new game in chat {}", self.chat_id)
+        logger.info("Start new game in chat {}", self.room_id)
         self.winner = None
         self.bankrupts.clear()
         shuffle(self.players)
@@ -103,7 +103,7 @@ class MonoGame:
 
     def add_player(self, user: BaseUser) -> Player:
         """Добавляет игрока в игру."""
-        logger.info("Joining {} in game with id {}", user, self.chat_id)
+        logger.info("Joining {} in game with id {}", user, self.room_id)
         if not self.open:
             raise LobbyClosedError()
 

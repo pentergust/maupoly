@@ -61,10 +61,10 @@ class Event:
     """Игровое событие."""
 
     room_id: str
-    player: Player
+    player: "Player"
     event_type: GameEvents
     data: str
-    game: MonoGame
+    game: "MonoGame"
 
 
 # Абстрактные классы

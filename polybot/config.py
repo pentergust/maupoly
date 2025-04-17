@@ -8,8 +8,8 @@
 from pathlib import Path
 
 from aiogram.client.default import DefaultBotProperties
-from pydantic import BaseModel, SecretStr
-from pydantic_settings import SettingsConfigDict
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from maupoly.session import SessionManager
 
@@ -17,7 +17,7 @@ from maupoly.session import SessionManager
 # ====================
 
 
-class Config(BaseModel):
+class Config(BaseSettings):
     """Общие настройки для Telegram бота, касающиеся игры.
 
     - telegram_token: Токен от Telegram бота.
@@ -28,7 +28,7 @@ class Config(BaseModel):
     assets_path: Path
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="allow"
+        env_file=".env", env_file_encoding="utf-8"
     )
 
 

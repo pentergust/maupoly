@@ -5,18 +5,19 @@
 в роутер `player`.
 """
 
-from aiogram import Bot, F, Router
+from aiogram import F, Router
 from aiogram.filters import Command
 
 # from aiogram.filters.callback_data import CallbackData
 from aiogram.types import CallbackQuery, Message
 from loguru import logger
 
-from maupoly.exceptions import NoGameInChatError
+from maupoly.exceptions import NoGameInChatError, NotEnoughPlayersError
 from maupoly.game import MonoGame
+from maupoly.player import BaseUser
 from maupoly.session import SessionManager
-from polybot import keyboards, messages
-from polybot.config import config
+from polybot import filters, messages
+from polybot.events.journal import MessageChannel
 
 router = Router(name="Sessions")
 
@@ -31,42 +32,47 @@ ROOM_SETTINGS = (
 # Обработчики
 # ===========
 
+
 @router.message(Command("game"))
-async def create_game(message: Message,
-    sm: SessionManager,
-    game: MonoGame | None,
-    bot: Bot
-):
+async def create_game(
+    message: Message, sm: SessionManager, game: MonoGame | None
+) -> None:
     """Создаёт новую комнату."""
     if message.chat.type == "private":
-        return await message.answer("👀 Игры создаются в групповом чате.")
+        await message.answer("👀 Игры создаются в групповом чате.")
 
     # Если игра ещё не началась, получаем её
-    if game is None or game.started:
-        game = sm.create(message.chat.id)
-        game.start_player = message.from_user
+    if game is None:
+        if message.from_user is None:
+            raise ValueError("None User tries create new game")
 
-    lobby_message = await message.answer(
-        messages.get_room_status(game),
-        reply_markup=keyboards.get_room_markup(game)
-    )
-    # Добавляем ID сообщения с лобби, чтобы после редактировать его
-    game.lobby_message = lobby_message.message_id
+        game = sm.create(
+            str(message.chat.id),
+            BaseUser(message.from_user.id, message.from_user.mention_html()),
+        )
+
+    if game.started:
+        await message.answer(
+            "🔑 Игра уже начата. Для начала её нужно завершить. (/stop)"
+        )
+
 
 @router.message(Command("start"))
-async def start_gama(message: Message, game: MonoGame | None):
+async def start_gama(message: Message, game: MonoGame | None) -> None:
     """Запускает игру в комнате."""
     if message.chat.type == "private":
-        return await message.answer(messages.HELP_MESSAGE)
+        await message.answer(messages.HELP_MESSAGE)
+        return
 
     if game is None:
-        await message.answer(messages.NO_ROOM_MESSAGE)
+        message.answer(messages.NO_ROOM_MESSAGE)
+        return
 
     elif game.started:
         await message.answer("🌳 Игра уже началась ранее.")
 
-    elif len(game.players) < config.min_players:
-        await message.answer9(messages.NOT_ENOUGH_PLAYERS)
+    elif len(game.players) < 2:  # noqa: PLR2004
+        raise NotEnoughPlayersError
 
     else:
         try:
@@ -77,163 +83,72 @@ async def start_gama(message: Message, game: MonoGame | None):
                 "🧹 Пожалуйста выдайте мне права удалять сообщения в чате."
             )
 
-        game.new_game()
-        game.journal.add(messages.get_new_game_message(game))
-        game.journal.set_markup(keyboards.TURN_MARKUP)
-        await game.journal.send_journal()
+        game.start()
 
-@router.message(Command("stop"))
-async def stop_gama(message: Message, game: MonoGame | None, sm: SessionManager):
+
+@router.message(Command("stop"), filters.GameOwner())
+async def stop_gama(
+    message: Message, game: MonoGame, sm: SessionManager
+) -> None:
     """Принудительно завершает текущую игру."""
-    if game is None:
-        return await message.answer(messages.NO_ROOM_MESSAGE)
-
-    player = game.get_player(message.from_user.id)
-    if player is None or not player.is_owner:
-        return await message.answer(
-            "🍓 Только создатель комнаты может завершить игру."
-        )
-
-    sm.remove(game.chat_id)
-    await message.answer((
-        "🧹 Игра была добровольно-принудительно остановлена.\n"
-        f"{messages.end_game_message(game)}"
-    ))
-
-
-# Управление настройками комнаты
-# ==============================
-
-@router.message(Command("open"))
-async def open_gama(message: Message, game: MonoGame | None, sm: SessionManager):
-    """Открывает игровую комнату для всех участников чата."""
-    if game is None:
-        return await message.answer(messages.NO_ROOM_MESSAGE)
-
-    player = game.get_player(message.from_user.id)
-    if player is None or not player.is_owner:
-        return await message.answer(
-            "👀 Только создатель комнаты может открыть комнату."
-        )
-
-    game.open = True
-    await message.answer(
-        "🍰 Комната <b>открыта</b>!\n любой участник может зайти (/join)."
-    )
-
-@router.message(Command("close"))
-async def close_gama(message: Message,
-    game: MonoGame | None,
-    sm: SessionManager
-):
-    """Закрывает игровую комнату для всех участников чата."""
-    if game is None:
-        return await message.answer(messages.NO_ROOM_MESSAGE)
-
-    player = game.get_player(message.from_user.id)
-    if player is None or not player.is_owner:
-        return await message.answer(
-            "👀 Только создатель комнаты может закрыть комнату."
-        )
-
-    game.open = False
-    await message.answer(
-        "🔒 Комната <b>закрыта</b>.\nНикто не помешает вам доиграть."
-    )
+    sm.remove(game.room_id)
 
 
 # Управление участниками комнатами
 # ================================
 
-@router.message(Command("kick"))
-async def kick_player(message: Message,
-    game: MonoGame | None,
-    sm: SessionManager
-):
+
+@router.message(Command("kick"), filters.GameOwner())
+async def kick_player(
+    message: Message,
+    game: MonoGame,
+    sm: SessionManager,
+    channel: MessageChannel,
+) -> None:
     """Выкидывает участника из комнаты."""
-    if game is None:
-        return await message.answer(messages.NO_ROOM_MESSAGE)
-
-    if not game.started:
-        return await message.answer(
-            "🍰 Игра ещё не началась, пока рано выкидывать участников."
-        )
-
-    player = game.get_player(message.from_user.id)
-    if player is None or not  player.is_owner:
-        return await message.answer(
-            "🍓 Только создатель комнаты может выгнать участника."
-        )
-
-    if message.reply_to_message is None:
-        return await message.answer(
+    if (
+        message.reply_to_message is None
+        or message.reply_to_message.from_user is None
+    ):
+        raise ValueError(
             "🍷 Перешлите сообщение негодника, которого нужно исключить."
         )
 
     kicked_user = message.reply_to_message.from_user
-    try:
-        game.remove_player(kicked_user.id)
-    except NoGameInChatError:
-        return message.answer(
-            "🍓 Указанный пользователь даже не играет с нами."
-        )
+    kick_player = game.get_player(str(kicked_user.id))
+    channel.add(
+        f"🧹 {game.owner.name} выгнал "
+        f"{kicked_user} из игры за плохое поведение.\n"
+    )
+    await channel.send()
+    if kick_player is not None:
+        sm.leave(kick_player)
 
-    game.journal.add((
-        f"🧹 {game.start_player.mention_html()} выгнал "
-        f"{kicked_user.mention_html()} из игры за плохое поведение.\n"
-    ))
-    if game.started:
-        game.journal.add((
-            "🍰 Ладненько, следующих ход за "
-            f"{game.player.user.mention_html()}."
-        ))
-        game.journal.set_markup(keyboards.TURN_MARKUP)
-        await game.journal.send_journal()
-    else:
-        await message.answer((
-            f"{messages.NOT_ENOUGH_PLAYERS}\n\n"
-            f"{messages.end_game_message(game)}"
-        ))
-        sm.remove(message.chat.id)
 
-@router.message(Command("skip"))
-async def skip_player(message: Message,
-    game: MonoGame | None,
-    sm: SessionManager
-):
+@router.message(Command("skip"), filters.GameOwner())
+async def skip_player(
+    message: Message, game: MonoGame, channel: MessageChannel
+) -> None:
     """пропускает участника за долгое бездействие."""
-    if game is None:
-        return await message.answer(message.NO_ROOM_MESSAGE)
-
-    if not game.started:
-        return await message.answer(
-            "🌳 Игра ещё не началась, пока рано выкидывать участников."
-        )
-
-    player = game.get_player(message.from_user.id)
-    if player is None or not player.is_owner:
-        return await message.answer(
-            "🍓 Только создатель комнаты может пропустить игрока."
-        )
-
     skip_player = game.player
+    channel.add(
+        f"☕ {skip_player.name} потерял свои кубики.\n"
+        "Мы их нашли и дали игроку ещё немного карт от нас.\n"
+    )
     game.next_turn()
-    game.journal.add((
-        f"☕ {skip_player.user.mention_html()} потерял свои кубики.\n"
-        "А пока он(а) их ищет, мы переходим к следующему игроку.\n"
-        "🍰 Ладненько, следующих ход за "
-        f"{game.player.user.mention_html()}."
-    ))
-    game.journal.set_markup(keyboards.TURN_MARKUP)
-    await game.journal.send_journal()
+    await channel.send()
 
 
 # Обработчики событий
 # ===================
 
-@router.callback_query(F.data=="start_game")
-async def start_game_call(query: CallbackQuery, game: MonoGame | None):
+
+@router.callback_query(F.data == "start_game")
+async def start_game_call(query: CallbackQuery, game: MonoGame | None) -> None:
     """Запускает игру в комнате."""
+    if not isinstance(query.message, Message):
+        raise ValueError("Query.message is not a Message")
+
     try:
         await query.message.delete()
     except Exception as e:
@@ -242,9 +157,7 @@ async def start_game_call(query: CallbackQuery, game: MonoGame | None):
             "👀 Пожалуйста выдайте мне права удалять сообщения в чате."
         )
 
-    game.new_game()
-    game.journal.add(messages.get_new_game_message(game))
-    game.journal.set_markup(keyboards.TURN_MARKUP)
-    await game.journal.send_journal()
+    if game is None:
+        raise NoGameInChatError
 
-# TODO: Настройки игры, если такое вообще будет
+    game.start()

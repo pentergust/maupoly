@@ -8,18 +8,16 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from aiogram import Bot, Dispatcher
-from aiogram.types import (
-    CallbackQuery,
-    ChatMemberUpdated,
-    ErrorEvent,
-    Message,
-    Update,
-)
+from aiogram.types import ErrorEvent, Update
 from aiogram.utils.token import TokenValidationError
 from loguru import logger
 
 from polybot.config import config, default, sm
+from polybot.events.journal import MessageJournal
+from polybot.events.router import er
 from polybot.handlers import ROUTERS
+from polybot.messages import get_error_message
+from polybot.utils import get_context
 
 # Константы
 # =========
@@ -47,19 +45,21 @@ async def game_middleware(
     data: dict[str, Any],
 ) -> Awaitable[Any]:
     """Предоставляет экземпляр игры в обработчики сообщений."""
-    if isinstance(event, Message | ChatMemberUpdated):
-        game = sm.games.get(event.chat.id)
-    elif isinstance(event, CallbackQuery):
-        if event.message is None:
-            chat_id = sm.user_to_chat.get(event.from_user.id)
-            game = None if chat_id is None else sm.games.get(chat_id)
-        else:
-            game = sm.games.get(event.message.chat.id)
+    try:
+        context = get_context(sm, event)
+        data["game"] = context.game
+        data["player"] = context.player
+        data["channel"] = (
+            sm.event_handler.get_channel(context.game.room_id)
+            if context.game is not None
+            else None
+        )
+    except Exception as e:
+        logger.error(e)
+        data["game"] = None
+        data["player"] = None
+        data["channel"] = None
 
-    data["game"] = game
-    data["player"] = (
-        None if game is None else game.get_player(event.from_user.id)
-    )
     return await handler(event, data)
 
 
@@ -68,6 +68,16 @@ async def catch_errors(event: ErrorEvent) -> None:
     """Простой обработчик для ошибок."""
     logger.warning(event)
     logger.exception(event.exception)
+
+    if event.update.callback_query:
+        message = event.update.callback_query.message
+    elif event.update.message:
+        message = event.update.message
+    else:
+        message = None
+
+    if message is not None:
+        await message.answer(get_error_message(event.exception))
 
 
 # Главная функция запуска бота
@@ -84,14 +94,11 @@ async def main() -> None:
     logger.remove()
     logger.add(sys.stdout, format=LOG_FORMAT)
 
-    logger.info("Check config")
-    logger.debug("Token: {}", config.token)
-    logger.debug("Db url: {}", config.db_url)
-
     logger.info("Setup bot ...")
     try:
-        bot = Bot(token=config.token.get_secret_value(), default=default)
-        sm.bot = bot
+        bot = Bot(
+            token=config.telegram_token.get_secret_value(), default=default
+        )
     except TokenValidationError as e:
         logger.error(e)
         logger.info("Check your bot token in .env file.")
@@ -101,6 +108,9 @@ async def main() -> None:
     for router in ROUTERS:
         dp.include_router(router)
         logger.debug("Include router {}", router.name)
+
+    logger.info("Set event handler")
+    sm.set_handler(MessageJournal(bot, er))
 
     logger.success("Start polling!")
     await dp.start_polling(bot)
