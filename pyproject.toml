@@ -25,3 +25,8 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "D", "N", "PL", "UP", "ANN", "W", "ASYNC"]
 ignore = ["D407", "D107", "D213", "D203"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+]
