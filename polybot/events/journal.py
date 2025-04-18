@@ -6,12 +6,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any, TypeVar
 
 from aiogram import Bot
-from aiogram.types import (
-    BufferedInputFile,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    Message,
-)
+from aiogram.types import BufferedInputFile, InlineKeyboardMarkup, Message
 from loguru import logger
 
 from maupoly.events import BaseEventHandler, Event, GameEvents
@@ -104,16 +99,18 @@ class MessageChannel:
     """Канал сообщений, привязанный к конкретному чату."""
 
     def __init__(
-        self, room_id: str, bot: Bot, default_markup: InlineKeyboardMarkup
+        self, room_id: int, bot: Bot, default_markup: InlineKeyboardMarkup
     ) -> None:
         self.room_id = room_id
         self.lobby_message: Message | None = None
         self.room_message: Message | None = None
-        self.message_queue: deque[str] = deque(maxlen=5)
+        self.message_queue: deque[str] = deque(maxlen=10)
         self.bot = bot
         self.default_markup = default_markup
         self.markup: InlineKeyboardMarkup | None = self.default_markup
         self.board: BufferedInputFile | None = None
+
+        self.semaphore = asyncio.Semaphore()
 
     async def send_lobby(
         self, message: str, reply_markup: InlineKeyboardMarkup | None = None
@@ -157,23 +154,25 @@ class MessageChannel:
         if len(self.message_queue) == 0:
             return None
 
-        if self.room_message is None:
-            self.room_message = await self.send_message(
-                text="\n".join(self.message_queue),
-            )
-        else:
-            await self.room_message.edit_caption(
-                caption="\n".join(self.message_queue),
-                reply_markup=self.markup,
-            )
+        async with self.semaphore:
+            if self.room_message is None:
+                self.room_message = await self.send_message(
+                    text="\n".join(self.message_queue),
+                )
+            else:
+                await self.room_message.edit_caption(
+                    caption="\n".join(self.message_queue),
+                    reply_markup=self.markup,
+                )
 
     async def clear(self) -> None:
         """Очищает буфер событий и сбрасывает клавиатуру."""
         self.markup = self.default_markup
         self.lobby_message = None
         if self.room_message is not None:
-            await self.room_message.delete()
+            await self.room_message.edit_reply_markup(reply_markup=None)
             self.room_message = None
+        self.message_queue = deque(maxlen=10)
 
     def set_markup(self, markup: InlineKeyboardMarkup | None) -> None:
         """Устанавливает клавиатуру для игровых событий."""
@@ -192,7 +191,7 @@ class MessageJournal(BaseEventHandler):
     """Обрабатывает события в рамках Telegram бота."""
 
     def __init__(self, bot: Bot, router: EventRouter) -> None:
-        self.channels: dict[str, MessageChannel] = {}
+        self.channels: dict[int, MessageChannel] = {}
         self._loop = asyncio.get_running_loop()
         self.bot: Bot = bot
         self.default_markup = TURN_MARKUP
@@ -203,7 +202,7 @@ class MessageJournal(BaseEventHandler):
         logger.debug(event)
         self._loop.create_task(self.router.process(event, self))
 
-    def get_channel(self, room_id: str) -> MessageChannel:
+    def get_channel(self, room_id: int) -> MessageChannel:
         """Получает/создаёт канал сообщений для чата."""
         channel = self.channels.get(room_id)
         if channel is None:
@@ -212,6 +211,6 @@ class MessageJournal(BaseEventHandler):
 
         return channel
 
-    def remove_channel(self, room_id: str) -> None:
+    def remove_channel(self, room_id: int) -> None:
         """Устанавливает канал сообщений для чата."""
         self.channels.pop(room_id)

@@ -70,9 +70,7 @@ async def leave_player(ctx: EventContext) -> None:
 @er.handler(event=GameEvents.GAME_DICE)
 async def say_uno(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
-    ctx.gen_board()
     ctx.add(f"🎲 На кубике {ctx.event.data}")
-    await ctx.send()
 
 
 @er.handler(event=GameEvents.GAME_START)
@@ -101,6 +99,10 @@ async def set_game_state(ctx: EventContext) -> None:
 @er.handler(event=GameEvents.GAME_TURN)
 async def next_turn(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
+    # Отправляем накопленный буфер сообщений
+    await ctx.send()
+
+    # Создаём новое сообщение
     await ctx.clear()
     ctx.gen_board()
     ctx.add(
@@ -108,3 +110,9 @@ async def next_turn(ctx: EventContext) -> None:
         f"(💸 {ctx.event.player.balance})"
     )
     await ctx.send()
+
+
+@er.handler(event=GameEvents.GAME_MOVE)
+async def move_player(ctx: EventContext) -> None:
+    """Когда игрок перемещается по полю."""
+    ctx.add(f"💎 Вы попали на поле {ctx.event.player.field.name}!")

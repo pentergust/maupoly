@@ -17,7 +17,7 @@ router = Router(name="Turn")
 # ===========
 
 
-@router.callback_query(F.data == "dice", filters.ActivePlayer())
+@router.callback_query(F.data == "dice", filters.NowPlaying())
 async def roll_dice(
     query: CallbackQuery,
     game: MonoGame,
@@ -25,16 +25,4 @@ async def roll_dice(
     channel: MessageChannel,
 ) -> None:
     """Обрабатывает бросок кубика."""
-    if game is None or player is None or game.player != player:
-        await query.answer("🍉 А вы точно сейчас ходите?")
-
-    dice_1 = randint(1, 6)
-    dice_2 = randint(1, 6)
-    dice_res = dice_1 + dice_2
-    game.process_turn(dice_res)
-
-    # TODO: Ты поедешь в другое место
-    channel.add(f"💎 Вы попали на поле {game.fields[game.player.index].name}!")
-
-    # TODO: Костыль кароче тут
-    game.next_turn()
+    game.process_turn(randint(1, 6) + randint(1, 6))
