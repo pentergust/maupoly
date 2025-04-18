@@ -1,7 +1,11 @@
 from dataclasses import dataclass
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 from maupoly.events import Event, GameEvents
+from maupoly.field import BaseField
+
+if TYPE_CHECKING:
+    from maupoly.game import MonoGame
 
 
 @dataclass(frozen=True, slots=True)
@@ -18,7 +22,7 @@ class BaseUser:
 
 # TODO: Написать класс пользователя
 class Player:
-    def __init__(self, game, user_id: int, user_name: str) -> None:
+    def __init__(self, game: "MonoGame", user_id: int, user_name: str) -> None:
         self.game = game
         self.user_id = user_id
         self._user_name = user_name
@@ -44,6 +48,11 @@ class Player:
             Event(self.game.room_id, self, event_type, data, self.game)
         )
 
+    @property
+    def field(self) -> BaseField:
+        """Сокращение для получения поля, на котором стоит игрок."""
+        return self.game.fields[self.index]
+
     # Магические методы
     # =================
 
@@ -62,3 +71,8 @@ class Player:
     def __ne__(self, other_player: Self) -> bool:
         """Проверяет что игроки не совпадают."""
         return self.user_id != other_player.user_id
+
+    def move(self, steps: int) -> None:
+        """Перемещает игрока на N клеток по полю."""
+        self.push_event(GameEvents.GAME_MOVE, str(steps))
+        self.index = (self.index + steps) % len(self.game.fields)

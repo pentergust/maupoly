@@ -17,7 +17,7 @@ from maupoly.player import BaseUser, Player
 # TODO: Написать класс игры
 class MonoGame:
     def __init__(
-        self, journal: BaseEventHandler, room_id: str, owner: BaseUser
+        self, journal: BaseEventHandler, room_id: int, owner: BaseUser
     ) -> None:
         self.room_id = room_id
         self.event_handler: BaseEventHandler = journal
@@ -48,7 +48,7 @@ class MonoGame:
             raise ValueError("Game not started to get players")
         return self.players[self.current_player % len(self.players)]
 
-    def get_player(self, user_id: str) -> Player | None:
+    def get_player(self, user_id: int) -> Player | None:
         """Получает игрока среди списка игроков по его ID."""
         for player in self.players:
             if player.user_id == user_id:
@@ -67,7 +67,8 @@ class MonoGame:
             Event(self.room_id, from_player, event_type, data, self)
         )
 
-    def start(self):
+    def start(self) -> None:
+        """Начинает новую игру."""
         logger.info("Start new game in chat {}", self.room_id)
         self.winner = None
         self.bankrupts.clear()
@@ -90,13 +91,21 @@ class MonoGame:
         self.push_event(self.owner, GameEvents.GAME_END)
 
     def process_turn(self, dice: int) -> None:
+        """Обрабатывает бросок кубика."""
         cur_player = self.player
         self.push_event(cur_player, GameEvents.GAME_DICE, str(dice))
-        cur_player.index = (cur_player.index + dice) % len(self.fields)
+        cur_player.move(dice)
+
+        # TODO: Запускаем действие поля
+        # cur_player.field()
+
+        if self.state == TurnState.NEXT:
+            self.next_turn()
 
     def next_turn(self) -> None:
+        """Передает ход следующему игроку."""
         logger.info("Next Player")
-        self.state = TurnState.PRE_DICE
+        self.state = TurnState.NEXT
         self.turn_start = datetime.now()
         self.skip_players()
         self.push_event(self.player, GameEvents.GAME_TURN)

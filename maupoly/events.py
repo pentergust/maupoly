@@ -36,6 +36,7 @@ class GameEvents(StrEnum):
     - game_turn: Переход к следующему ходу.
     - game_state: Изменение состояния игры.
     - game_dice: Был выброшен кубик с некоторым числом.
+    - game_move: Перемещение игрока по полю.
     """
 
     # Игровые сессии
@@ -54,13 +55,14 @@ class GameEvents(StrEnum):
     GAME_TURN = "game_turn"
     GAME_STATE = "game_state"
     GAME_DICE = "game_dice"
+    GAME_MOVE = "game_move"
 
 
 @dataclass(slots=True, frozen=True)
 class Event:
     """Игровое событие."""
 
-    room_id: str
+    room_id: int
     player: "Player"
     event_type: GameEvents
     data: str
