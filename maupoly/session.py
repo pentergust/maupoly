@@ -44,7 +44,7 @@ class SessionManager(Generic[_H]):
     # Управление игроками в сессии
     # ================W============
 
-    def join(self, room_id: str, user: BaseUser) -> None:
+    def join(self, room_id: int, user: BaseUser) -> None:
         """Добавляет нового игрока в игру.
 
         Более высокоуровневая функция, совершает больше проверок.
@@ -68,7 +68,7 @@ class SessionManager(Generic[_H]):
             Event(game.room_id, player, GameEvents.SESSION_LEAVE, "", game)
         )
 
-    def get_player(self, user_id: str) -> Player | None:
+    def get_player(self, user_id: int) -> Player | None:
         """Получает игрока комнаты по его user id."""
         try:
             return self.storage.get_player_game(user_id).get_player(user_id)
@@ -79,7 +79,7 @@ class SessionManager(Generic[_H]):
     # Управление сессиями
     # ===================
 
-    def create(self, room_id: str, user: BaseUser) -> MonoGame:
+    def create(self, room_id: int, user: BaseUser) -> MonoGame:
         """Создает новую игру в чате."""
         logger.info("User {} Create new game session in {}", user, room_id)
         game = MonoGame(self.event_handler, room_id, user)
@@ -90,7 +90,7 @@ class SessionManager(Generic[_H]):
         )
         return game
 
-    def remove(self, room_id: str) -> None:
+    def remove(self, room_id: int) -> None:
         """Полностью завершает игру в конкретном чате.
 
         Если вы хотите завершить текущий кон - воспользуйтесь методов

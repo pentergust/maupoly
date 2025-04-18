@@ -18,22 +18,22 @@ class BaseStorage(ABC):
     # ======
 
     @abstractmethod
-    def add_player(self, room_id: str, user_id: str) -> None:
+    def add_player(self, room_id: int, user_id: int) -> None:
         """Добавляет игрока в хранилище."""
         pass
 
     @abstractmethod
-    def remove_player(self, user_id: str) -> None:
+    def remove_player(self, user_id: int) -> None:
         """Удаляет пользователя из хранилища."""
         pass
 
     @abstractmethod
-    def get_room(self, user_id: str) -> str:
+    def get_room(self, user_id: int) -> int:
         """Получает room_id для указанного игрока."""
         pass
 
     @abstractmethod
-    def get_player_game(self, user_id: str) -> MonoGame:
+    def get_player_game(self, user_id: int) -> MonoGame:
         """Получает игру, в которой находится игрок."""
         pass
 
@@ -41,17 +41,17 @@ class BaseStorage(ABC):
     # ====
 
     @abstractmethod
-    def add_game(self, room_id: str, game: MonoGame) -> None:
+    def add_game(self, room_id: int, game: MonoGame) -> None:
         """Добавляет новую игру в хранилище."""
         pass
 
     @abstractmethod
-    def get_game(self, room_id: str) -> MonoGame:
+    def get_game(self, room_id: int) -> MonoGame:
         """Получает игру по room_id."""
         pass
 
     @abstractmethod
-    def remove_game(self, room_id: str) -> MonoGame:
+    def remove_game(self, room_id: int) -> MonoGame:
         """Удаляет комнату из хранилища."""
         pass
 
@@ -67,26 +67,26 @@ class MemoryStorage(BaseStorage):
     """
 
     def __init__(self) -> None:
-        self.games: dict[str, MonoGame] = {}
-        self.user_to_room: dict[str, str] = {}
-        self.game_journal: dict[str, BaseEventHandler]
+        self.games: dict[int, MonoGame] = {}
+        self.user_to_room: dict[int, int] = {}
+        self.game_journal: dict[int, BaseEventHandler]
 
-    def add_player(self, room_id: str, user_id: str) -> None:
+    def add_player(self, room_id: int, user_id: int) -> None:
         """Добавляет игрока в хранилище."""
         self.user_to_room[user_id] = room_id
 
-    def remove_player(self, user_id: str) -> None:
+    def remove_player(self, user_id: int) -> None:
         """Удаляет пользователя из хранилища."""
         self.user_to_room.pop(user_id)
 
-    def get_room(self, user_id: str) -> str:
+    def get_room(self, user_id: int) -> int:
         """Получает room_id для указанного игрока."""
         try:
             return self.user_to_room[user_id]
         except KeyError:
             raise exceptions.NoGameInChatError from KeyError
 
-    def get_player_game(self, user_id: str) -> MonoGame:
+    def get_player_game(self, user_id: int) -> MonoGame:
         """Получает игру, в которой находится игрок."""
         try:
             room_id = self.user_to_room[user_id]
@@ -94,18 +94,18 @@ class MemoryStorage(BaseStorage):
         except KeyError:
             raise exceptions.NoGameInChatError from KeyError
 
-    def get_game(self, room_id: str) -> MonoGame:
+    def get_game(self, room_id: int) -> MonoGame:
         """Получает игру по room_id."""
         try:
             return self.games[room_id]
         except KeyError:
             raise exceptions.NoGameInChatError from KeyError
 
-    def add_game(self, room_id: str, game: MonoGame) -> None:
+    def add_game(self, room_id: int, game: MonoGame) -> None:
         """Добавляет новую игру в хранилище."""
         self.games[room_id] = game
 
-    def remove_game(self, room_id: str) -> MonoGame:
+    def remove_game(self, room_id: int) -> MonoGame:
         """Удаляет комнату из хранилища."""
         try:
             return self.games.pop(room_id)
