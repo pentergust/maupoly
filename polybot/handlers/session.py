@@ -41,20 +41,19 @@ async def create_game(
     if message.chat.type == "private":
         await message.answer("👀 Игры создаются в групповом чате.")
 
-    # Если игра ещё не началась, получаем её
-    if game is None:
-        if message.from_user is None:
-            raise ValueError("None User tries create new game")
-
-        game = sm.create(
-            str(message.chat.id),
-            BaseUser(message.from_user.id, message.from_user.mention_html()),
-        )
-
-    if game.started:
+    if game is not None and game.started:
         await message.answer(
             "🔑 Игра уже начата. Для начала её нужно завершить. (/stop)"
         )
+        return
+
+    if message.from_user is None:
+        raise ValueError("None User tries create new game")
+
+    game = sm.create(
+        message.chat.id,
+        BaseUser(message.from_user.id, message.from_user.mention_html()),
+    )
 
 
 @router.message(Command("start"))
@@ -115,7 +114,7 @@ async def kick_player(
         )
 
     kicked_user = message.reply_to_message.from_user
-    kick_player = game.get_player(str(kicked_user.id))
+    kick_player = game.get_player(kicked_user.id)
     channel.add(
         f"🧹 {game.owner.name} выгнал "
         f"{kicked_user} из игры за плохое поведение.\n"

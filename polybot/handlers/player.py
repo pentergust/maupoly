@@ -30,7 +30,7 @@ async def join_player(message: Message, sm: SessionManager) -> None:
         raise ValueError("User can`t be none")
 
     sm.join(
-        str(message.chat.id),
+        message.chat.id,
         BaseUser(message.from_user.id, message.from_user.mention_html()),
     )
 
@@ -63,7 +63,7 @@ async def join_callback(query: CallbackQuery, sm: SessionManager) -> None:
 
     try:
         sm.join(
-            str(query.message.chat.id),
+            query.message.chat.id,
             BaseUser(query.from_user.id, query.from_user.mention_html()),
         )
     except AlreadyJoinedError:

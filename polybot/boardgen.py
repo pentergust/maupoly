@@ -11,6 +11,7 @@ from maupoly.game import MonoGame
 # Коллекция асетов изображений
 ASSETS_PATH = Path("assets/")
 
+
 class Asset(NamedTuple):
     name: str
     x: int
@@ -29,13 +30,12 @@ PLAYER_ASSET = [
     Asset("player_red.png", 448, 288),
     Asset("player_yellow.png", 288, 448),
     Asset("player_green.png", 608, 448),
-    Asset("player_blue.png", 448, 608)
+    Asset("player_blue.png", 448, 608),
 ]
 
 POINTER_COORDINATES = [
     # UP
     (104, 104),
-
     (208, 128),
     (280, 128),
     (352, 128),
@@ -45,10 +45,8 @@ POINTER_COORDINATES = [
     (640, 128),
     (712, 128),
     (784, 128),
-
     # Right
     (888, 104),
-
     (872, 208),
     (872, 280),
     (872, 352),
@@ -58,10 +56,8 @@ POINTER_COORDINATES = [
     (872, 640),
     (872, 712),
     (872, 784),
-
     # Down
     (888, 888),
-
     (784, 872),
     (712, 872),
     (640, 872),
@@ -71,9 +67,7 @@ POINTER_COORDINATES = [
     (352, 872),
     (280, 872),
     (208, 872),
-
     (104, 888),
-
     (120, 784),
     (120, 712),
     (120, 640),
@@ -83,7 +77,6 @@ POINTER_COORDINATES = [
     (120, 352),
     (120, 280),
     (120, 208),
-
 ]
 
 FIELD_COORDINATES = [
@@ -94,7 +87,6 @@ FIELD_COORDINATES = [
     (624, 88),
     (696, 88),
     (768, 88),
-
     # Rotate 1 / right
     (840, 192),
     (840, 264),
@@ -104,7 +96,6 @@ FIELD_COORDINATES = [
     (840, 552),
     (840, 696),
     (840, 768),
-
     # Rotate 2 / Down
     (768, 840),
     (624, 840),
@@ -114,27 +105,27 @@ FIELD_COORDINATES = [
     (336, 840),
     (264, 840),
     (192, 840),
-
     # Rotate 3 / Right
     (88, 768),
     (88, 696),
     (88, 552),
     (88, 480),
     (88, 336),
-    (88, 192)
+    (88, 192),
 ]
 
 
 # Вспомогательные функции для отрисовки
 # =====================================
 
-def paste_player_pointer(board: Image, index: int, color: int):
+
+def paste_player_pointer(board: Image, index: int, color: int) -> None:
     coordinates = POINTER_COORDINATES[index]
     player_pointer = Asset(
-        f"pointer_{color}.png",
-        coordinates[0], coordinates[1]
+        f"pointer_{color}.png", coordinates[0], coordinates[1]
     )
     player_pointer.paste_to(board)
+
 
 def paste_field(board: Image, index: int, color: int, locked: bool):
     coordinates = FIELD_COORDINATES[index]
@@ -148,8 +139,10 @@ def paste_field(board: Image, index: int, color: int, locked: bool):
     else:
         rotate = 3
 
-    field_asset = Asset(f"cell{rotate}/cell_{color}{'l' if locked else ''}.png",
-        coordinates[0], coordinates[1]
+    field_asset = Asset(
+        f"cell{rotate}/cell_{color}{'l' if locked else ''}.png",
+        coordinates[0],
+        coordinates[1],
     )
     field_asset.paste_to(board)
 
@@ -168,5 +161,5 @@ def generate_board(game: MonoGame) -> BufferedInputFile:
         board, Image.alpha_composite(draw_layer, pointer_layer)
     )
     buffer = io.BytesIO()
-    composite.save(buffer, format='PNG')
+    composite.save(buffer, format="PNG")
     return BufferedInputFile(buffer.getvalue(), f"board_{int(time())}.png")

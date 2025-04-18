@@ -128,10 +128,7 @@ class NowPlaying(Filter):
             await event.answer("🍉 А вы точно сейчас играете?")
             return False
 
-        if (
-            context.game.player == context.player
-            or context.game.rules.ahead_of_curve.status
-        ):
+        if context.game.player == context.player:
             return True
 
         await event.answer("🍉 А сейчас точно ваш ход?")
