@@ -164,3 +164,12 @@ class MonoGame:
         """
         self.push_event(self.player, GameEvents.GAME_NEXT, str(n))
         self.current_player = (self.current_player + n) % len(self.players)
+
+    def set_state(self, state: TurnState) -> None:
+        """Устанавливает новое состояние дли игры.
+
+        Автоматически отправлять событие о смене состояния от имени
+        текущего игрока.
+        """
+        self.state = state
+        self.push_event(self.player, GameEvents.GAME_STATE, str(state))

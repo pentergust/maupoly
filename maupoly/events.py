@@ -37,6 +37,12 @@ class GameEvents(StrEnum):
     - game_state: Изменение состояния игры.
     - game_dice: Был выброшен кубик с некоторым числом.
     - game_move: Перемещение игрока по полю.
+
+    Игрок:
+    - player_buy: Игрок оплатил налог или получил возмещение.
+    - player_chance: Игрок попал на поле шанс.
+    - player_prison: Игрок попал в тюрьму.
+    - player_casino: Игрок попал на поле казино.
     """
 
     # Игровые сессии
@@ -56,6 +62,12 @@ class GameEvents(StrEnum):
     GAME_STATE = "game_state"
     GAME_DICE = "game_dice"
     GAME_MOVE = "game_move"
+
+    # События игрока
+    PLAYER_BUY = "player_buy"
+    PLAYER_CHANCE = "player_chance"
+    PLAYER_PRISON = "player_prison"
+    PLAYER_CASINO = "player_casino"
 
 
 @dataclass(slots=True, frozen=True)

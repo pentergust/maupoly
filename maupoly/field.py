@@ -7,6 +7,9 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
+from maupoly.enums import TurnState
+from maupoly.events import GameEvents
+
 if TYPE_CHECKING:
     from maupoly.game import MonoGame
     from maupoly.player import Player
@@ -113,6 +116,13 @@ class BuyField(BaseField):
         self.cost = cost
         self.is_reward = is_reward
 
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Оплата или получение монет."""
+        game.player.push_event(
+            GameEvents.PLAYER_BUY, f"{self.cost} {self.is_reward}"
+        )
+        # TODO: Методы игрока для оплаты или покупки
+
 
 class RentField(BaseField):
     """Поле ренты.
@@ -141,6 +151,10 @@ class RentField(BaseField):
         self.redemption_cost = None
         self.is_deposit = False
 
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Покупка поля или оплата ренты."""
+        game.set_state(TurnState.BYU)
+
 
 class AirportField(BaseField):
     """Самолёты.
@@ -159,6 +173,10 @@ class AirportField(BaseField):
         self.deposit_cost = None
         self.redemption_cost = None
         self.is_deposit = False
+
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Покупка поля или оплата ренты."""
+        game.set_state(TurnState.BYU)
 
 
 class CommunicateField(BaseField):
@@ -179,6 +197,10 @@ class CommunicateField(BaseField):
         self.deposit_cost = None
         self.redemption_cost = None
         self.is_deposit = False
+
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Покупка поля или оплата ренты."""
+        game.set_state(TurnState.BYU)
 
 
 class ChanceField(BaseField):
@@ -202,6 +224,10 @@ class PrizeField(BaseField):
     def __init__(self) -> None:
         super().__init__(field_type=FieldType.PRIZE, name="Общественная казна")
 
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Случайное действие карточки шанс."""
+        game.player.push_event(GameEvents.PLAYER_CHANCE, "No implemented")
+
 
 class TeleportField(BaseField):
     """Поле телепорта.
@@ -212,6 +238,10 @@ class TeleportField(BaseField):
     def __init__(self, name: str, to_field: int) -> None:
         super().__init__(field_type=FieldType.TELEPORT, name=name)
         self.to_field = to_field
+
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Случайное действие карточки общественная казна."""
+        game.player.push_event(GameEvents.PLAYER_CHANCE, "No implemented")
 
 
 class PrisonField(BaseField):
@@ -225,6 +255,10 @@ class PrisonField(BaseField):
     def __init__(self) -> None:
         super().__init__(field_type=FieldType.PRISON, name="Тюрьма")
 
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """игрок попал в тюрьму."""
+        game.player.push_event(GameEvents.PLAYER_PRISON)
+
 
 class CasinoField(BaseField):
     """Поле казино.
@@ -235,6 +269,10 @@ class CasinoField(BaseField):
 
     def __init__(self) -> None:
         super().__init__(field_type=FieldType.CASINO, name="Казино")
+
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """игрока попал на поле казино."""
+        game.player.push_event(GameEvents.PLAYER_CASINO)
 
 
 # Игровые поля

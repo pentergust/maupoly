@@ -5,17 +5,19 @@
 Чтобы не создавать циклических зависимостей.
 """
 
-from enum import IntEnum
+from enum import StrEnum
 
 
-class TurnState(IntEnum):
+class TurnState(StrEnum):
     """Состояние хода.
 
     Описывает в каком состоянии находится текущий ход.
 
     - Next: Ход продолжается.
     - Contract: Сделка с другим участником.
+    - Byu: Покупка поля с рентой.
     """
 
-    NEXT = 0
-    CONTRACT = 3
+    NEXT = "next"
+    CONTRACT = "contract"
+    BYU = "byu"
