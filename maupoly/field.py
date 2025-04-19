@@ -241,7 +241,7 @@ class TeleportField(BaseField):
 
     def callback(self, game: "MonoGame", player: "Player") -> None:
         """Случайное действие карточки общественная казна."""
-        game.player.push_event(GameEvents.PLAYER_CHANCE, "No implemented")
+        game.player.move_to(self.to_field)
 
 
 class PrisonField(BaseField):

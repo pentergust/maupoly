@@ -95,9 +95,7 @@ class MonoGame:
         cur_player = self.player
         self.push_event(cur_player, GameEvents.PLAYER_DICE, str(dice))
         cur_player.move(dice)
-
-        # TODO: Запускаем действие поля
-        # cur_player.field()
+        cur_player.field(self, cur_player)
 
         if self.state == TurnState.NEXT:
             self.next_turn()

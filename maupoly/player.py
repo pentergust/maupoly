@@ -76,3 +76,8 @@ class Player:
         """Перемещает игрока на N клеток по полю."""
         self.push_event(GameEvents.PLAYER_MOVE, str(steps))
         self.index = (self.index + steps) % len(self.game.fields)
+
+    def move_to(self, index: int) -> None:
+        """Перемещает игрока на конкретное поле."""
+        self.push_event(GameEvents.PLAYER_MOVE, str(index))
+        self.index = index % len(self.game.fields)
