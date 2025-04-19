@@ -25,7 +25,6 @@ class GameEvents(StrEnum):
     - session_end: Закончилась сессия.
     - session_join: Игрок присоединился к сессии.
     - session_leave: Игрок покинул сессию.
-    - session_update: Данные комнаты обновлены. Правила, информация, владелец.
 
     Игра:
     - game_start: Началась новая игра.
@@ -50,7 +49,6 @@ class GameEvents(StrEnum):
     SESSION_END = "session_end"
     SESSION_JOIN = "session_join"
     SESSION_LEAVE = "session_leave"
-    SESSION_UPDATE = "session_update"
 
     # Игровые события
     GAME_START = "game_start"
