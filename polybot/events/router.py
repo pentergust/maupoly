@@ -88,6 +88,7 @@ async def leave_player(ctx: EventContext) -> None:
 async def next_turn(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
     # Отправляем накопленный буфер сообщений
+    ctx.add("🍺 Завершаю ход")
     await ctx.send()
 
     # Создаём новое сообщение
@@ -131,7 +132,11 @@ async def move_player(ctx: EventContext) -> None:
 @er.handler(event=GameEvents.PLAYER_BUY)
 async def byu_field(ctx: EventContext) -> None:
     """Когда пользователь попал на поле, которое можно купить."""
-    ctx.add(f"👀 {ctx.event.player.name} задумывается о покупке.")
+    cost, is_reward = ctx.event.data.split()
+    if is_reward == "true":
+        ctx.add(f"💸 {ctx.event.player.name} Получает {cost}")
+    else:
+        ctx.add(f"💸 {ctx.event.player.name} должен заплатить {cost}")
     ctx.set_markup(keyboards.NEXT_MARKUP)
     await ctx.send()
 
