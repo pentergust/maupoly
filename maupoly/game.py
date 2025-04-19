@@ -3,6 +3,7 @@ from random import shuffle
 
 from loguru import logger
 
+from maupoly.dice import Dice
 from maupoly.enums import TurnState
 from maupoly.events import BaseEventHandler, Event, GameEvents
 from maupoly.exceptions import (
@@ -16,6 +17,8 @@ from maupoly.player import BaseUser, Player
 
 # TODO: Написать класс игры
 class MonoGame:
+    """Игровая сессия."""
+
     def __init__(
         self, journal: BaseEventHandler, room_id: int, owner: BaseUser
     ) -> None:
@@ -90,11 +93,11 @@ class MonoGame:
         self.started = False
         self.push_event(self.owner, GameEvents.GAME_END)
 
-    def process_turn(self, dice: int) -> None:
+    def process_turn(self, dice: Dice) -> None:
         """Обрабатывает бросок кубика."""
         cur_player = self.player
         self.push_event(cur_player, GameEvents.PLAYER_DICE, str(dice))
-        cur_player.move(dice)
+        cur_player.move(dice.total)
         cur_player.field(self, cur_player)
 
         if self.state == TurnState.NEXT:
