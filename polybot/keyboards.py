@@ -8,6 +8,12 @@ TURN_MARKUP = InlineKeyboardMarkup(
     ]
 )
 
+NEXT_MARKUP = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="🌟 Завершить ход", callback_data="next")]
+    ]
+)
+
 
 def get_room_markup(game: MonoGame) -> InlineKeyboardMarkup:
     """Вспомогательная клавиатура для управления комнатой."""

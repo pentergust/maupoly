@@ -35,6 +35,23 @@ async def end_session(ctx: EventContext) -> None:
 # ======================
 
 
+@er.handler(event=GameEvents.GAME_START)
+async def start_game(ctx: EventContext) -> None:
+    """Оповещает что пользователь зашёл в игру."""
+    ctx.gen_board()
+    ctx.add(messages.get_new_game_message(ctx.event.game))
+    await ctx.send()
+
+
+@er.handler(event=GameEvents.GAME_END)
+async def end_game(ctx: EventContext) -> None:
+    """Оповещает что пользователь зашёл в игру."""
+    ctx.add(messages.end_game_message(ctx.event.game))
+    ctx.set_markup(None)
+    sm.remove(ctx.event.room_id)
+    await ctx.send()
+
+
 @er.handler(event=GameEvents.GAME_JOIN)
 async def join_player(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
@@ -67,35 +84,6 @@ async def leave_player(ctx: EventContext) -> None:
     await ctx.send()
 
 
-@er.handler(event=GameEvents.PLAYER_DICE)
-async def say_uno(ctx: EventContext) -> None:
-    """Оповещает что пользователь зашёл в игру."""
-    ctx.add(f"🎲 На кубике {ctx.event.data}")
-
-
-@er.handler(event=GameEvents.GAME_START)
-async def start_game(ctx: EventContext) -> None:
-    """Оповещает что пользователь зашёл в игру."""
-    ctx.gen_board()
-    await ctx.send_message(messages.get_new_game_message(ctx.event.game))
-
-
-@er.handler(event=GameEvents.GAME_END)
-async def end_game(ctx: EventContext) -> None:
-    """Оповещает что пользователь зашёл в игру."""
-    ctx.add(messages.end_game_message(ctx.event.game))
-    ctx.set_markup(None)
-    sm.remove(ctx.event.room_id)
-    await ctx.send()
-
-
-@er.handler(event=GameEvents.GAME_STATE)
-async def set_game_state(ctx: EventContext) -> None:
-    """Изменение игрового состояния."""
-    ctx.add(f"⚙️ Новое состояние: {ctx.event.data}")
-    await ctx.send()
-
-
 @er.handler(event=GameEvents.GAME_TURN)
 async def next_turn(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
@@ -112,7 +100,57 @@ async def next_turn(ctx: EventContext) -> None:
     await ctx.send()
 
 
+# Обработка игровых состояний
+# ===========================
+
+
+@er.handler(event=GameEvents.GAME_STATE)
+async def new_game_state(ctx: EventContext) -> None:
+    """Изменение игрового состояния."""
+    ctx.add(f"⚙️ Новое состояние: {ctx.event.data}")
+    ctx.set_markup(keyboards.NEXT_MARKUP)
+    await ctx.send()
+
+
+# События игрока
+# ==============
+
+
+@er.handler(event=GameEvents.PLAYER_DICE)
+async def roll_dice(ctx: EventContext) -> None:
+    """Оповещает что пользователь зашёл в игру."""
+    ctx.add(f"🎲 На кубике {ctx.event.data}")
+
+
 @er.handler(event=GameEvents.PLAYER_MOVE)
 async def move_player(ctx: EventContext) -> None:
     """Когда игрок перемещается по полю."""
-    ctx.add(f"💎 Вы попали на поле {ctx.event.player.field.name}!")
+    ctx.add(f"🧭 Вы попали на поле {ctx.event.player.field.name}!")
+
+
+@er.handler(event=GameEvents.PLAYER_BUY)
+async def byu_field(ctx: EventContext) -> None:
+    """Когда пользователь попал на поле, которое можно купить."""
+    ctx.add(f"👀 {ctx.event.player.name} задумывается о покупке.")
+    ctx.set_markup(keyboards.NEXT_MARKUP)
+    await ctx.send()
+
+
+@er.handler(event=GameEvents.PLAYER_CHANCE)
+async def player_chance(ctx: EventContext) -> None:
+    """Когда игрок попал на поле шанс или общественная казна."""
+    ctx.add(f"✨ {ctx.event.data}!")
+
+
+@er.handler(event=GameEvents.PLAYER_PRISON)
+async def player_prison(ctx: EventContext) -> None:
+    """Когда игрок попал в тюрьму."""
+    ctx.add("⚡ вы были арестованы!")
+
+
+@er.handler(event=GameEvents.PLAYER_CASINO)
+async def player_casino(ctx: EventContext) -> None:
+    """Когда игрок попал в казино."""
+    ctx.add("🎰 вас приветствует казино!")
+    ctx.set_markup(keyboards.NEXT_MARKUP)
+    await ctx.send()
