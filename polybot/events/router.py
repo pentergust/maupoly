@@ -67,7 +67,7 @@ async def leave_player(ctx: EventContext) -> None:
     await ctx.send()
 
 
-@er.handler(event=GameEvents.GAME_DICE)
+@er.handler(event=GameEvents.PLAYER_DICE)
 async def say_uno(ctx: EventContext) -> None:
     """Оповещает что пользователь зашёл в игру."""
     ctx.add(f"🎲 На кубике {ctx.event.data}")
@@ -112,7 +112,7 @@ async def next_turn(ctx: EventContext) -> None:
     await ctx.send()
 
 
-@er.handler(event=GameEvents.GAME_MOVE)
+@er.handler(event=GameEvents.PLAYER_MOVE)
 async def move_player(ctx: EventContext) -> None:
     """Когда игрок перемещается по полю."""
     ctx.add(f"💎 Вы попали на поле {ctx.event.player.field.name}!")

@@ -93,7 +93,7 @@ class MonoGame:
     def process_turn(self, dice: int) -> None:
         """Обрабатывает бросок кубика."""
         cur_player = self.player
-        self.push_event(cur_player, GameEvents.GAME_DICE, str(dice))
+        self.push_event(cur_player, GameEvents.PLAYER_DICE, str(dice))
         cur_player.move(dice)
 
         # TODO: Запускаем действие поля

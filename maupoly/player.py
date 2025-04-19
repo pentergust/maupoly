@@ -74,5 +74,5 @@ class Player:
 
     def move(self, steps: int) -> None:
         """Перемещает игрока на N клеток по полю."""
-        self.push_event(GameEvents.GAME_MOVE, str(steps))
+        self.push_event(GameEvents.PLAYER_MOVE, str(steps))
         self.index = (self.index + steps) % len(self.game.fields)

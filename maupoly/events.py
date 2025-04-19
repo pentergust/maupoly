@@ -35,10 +35,10 @@ class GameEvents(StrEnum):
     - game_next: Переход к следующему игроку.
     - game_turn: Переход к следующему ходу.
     - game_state: Изменение состояния игры.
-    - game_dice: Был выброшен кубик с некоторым числом.
-    - game_move: Перемещение игрока по полю.
 
     Игрок:
+    - player_dice: Был выброшен кубик с некоторым числом.
+    - player_move: Перемещение игрока по полю.
     - player_buy: Игрок оплатил налог или получил возмещение.
     - player_chance: Игрок попал на поле шанс.
     - player_prison: Игрок попал в тюрьму.
@@ -60,10 +60,10 @@ class GameEvents(StrEnum):
     GAME_NEXT = "game_next"
     GAME_TURN = "game_turn"
     GAME_STATE = "game_state"
-    GAME_DICE = "game_dice"
-    GAME_MOVE = "game_move"
 
     # События игрока
+    PLAYER_DICE = "player_dice"
+    PLAYER_MOVE = "player_move"
     PLAYER_BUY = "player_buy"
     PLAYER_CHANCE = "player_chance"
     PLAYER_PRISON = "player_prison"
