@@ -1,3 +1,12 @@
+"""Генератор изображения игрового поля.
+
+Используется чтобы передавать актуальное состояние игры в Telegram бота.
+На изображении игровой доски есть:
+
+- Активный игрок.
+- Положение всех игроков.
+"""
+
 import io
 from pathlib import Path
 from time import time
@@ -5,6 +14,7 @@ from typing import NamedTuple
 
 from aiogram.types import BufferedInputFile
 from PIL import Image
+from PIL.ImageFile import ImageFile
 
 from maupoly.game import MonoGame
 
@@ -13,13 +23,19 @@ ASSETS_PATH = Path("assets/")
 
 
 class Asset(NamedTuple):
+    """Игровой асет из файла.
+
+    Содержит в себе путь к файлу и координаты, по которым надо его
+    установить.
+    """
+
     name: str
     x: int
     y: int
 
-    def paste_to(self, board: Image) -> None:
-        asset_image = Image.open(ASSETS_PATH / Path(self.name))
-        asset_image = asset_image.convert("RGBA")
+    def paste_to(self, board: ImageFile | Image.Image) -> None:
+        """Вспомогательный метод для быстрой установки асета на изображение."""
+        asset_image = Image.open(ASSETS_PATH / Path(self.name)).convert("RGBA")
         board.paste(asset_image, (self.x, self.y))
 
 
@@ -115,11 +131,24 @@ FIELD_COORDINATES = [
 ]
 
 
-# Вспомогательные функции для отрисовки
-# =====================================
+def get_rotate(index: int) -> int:
+    """Получает поворот поля в зависимости от индекса."""
+    if index < 6:  # noqa: PLR2004
+        return 0
+    elif index < 14:  # noqa: PLR2004
+        return 1
+    elif index < 22:  # noqa: PLR2004
+        return 2
+    else:
+        return 3
 
 
-def paste_player_pointer(board: Image, index: int, color: int) -> None:
+# Вспомогательные функции отрисовки
+# =================================
+
+
+def paste_player_pointer(board: Image.Image, index: int, color: int) -> None:
+    """Вставляет указатель на игрока нв изображение."""
     coordinates = POINTER_COORDINATES[index]
     player_pointer = Asset(
         f"pointer_{color}.png", coordinates[0], coordinates[1]
@@ -127,18 +156,13 @@ def paste_player_pointer(board: Image, index: int, color: int) -> None:
     player_pointer.paste_to(board)
 
 
-def paste_field(board: Image, index: int, color: int, locked: bool):
+def paste_field(board: ImageFile, index: int, color: int, locked: bool) -> None:
+    """Вставляет занятую клетку на доске."""
+    # Просчитанные заранее координаты
     coordinates = FIELD_COORDINATES[index]
+    rotate = get_rotate(index)
 
-    if index < 6:
-        rotate = 0
-    elif index < 14:
-        rotate = 1
-    elif index < 22:
-        rotate = 2
-    else:
-        rotate = 3
-
+    # Вставляем изображение
     field_asset = Asset(
         f"cell{rotate}/cell_{color}{'l' if locked else ''}.png",
         coordinates[0],
@@ -147,16 +171,26 @@ def paste_field(board: Image, index: int, color: int, locked: bool):
     field_asset.paste_to(board)
 
 
+# Главная функция
+# ===============
+
+
 def generate_board(game: MonoGame) -> BufferedInputFile:
+    """Собирает изображение игрового поля для бота."""
     board = Image.open(ASSETS_PATH / "board.png")
     draw_layer = Image.new("RGBA", board.size)
     pointer_layer = Image.new("RGBA", board.size)
 
+    # Кто сейчас ходит
     PLAYER_ASSET[game.current_player].paste_to(draw_layer)
 
+    # Указатели игроков
     for i, player in enumerate(game.players):
         paste_player_pointer(pointer_layer, player.index, i)
 
+    # TODO: Что там по занятым полям?
+
+    # Сохраняем изображение
     composite = Image.alpha_composite(
         board, Image.alpha_composite(draw_layer, pointer_layer)
     )
