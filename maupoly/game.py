@@ -4,8 +4,8 @@ from random import shuffle
 from loguru import logger
 
 from maupoly.dice import Dice
-from maupoly.enums import TurnState
-from maupoly.events import BaseEventHandler, Event, GameEvents
+from maupoly.enums import GameEvents, TurnState
+from maupoly.events import BaseEventHandler, Event
 from maupoly.exceptions import (
     AlreadyJoinedError,
     LobbyClosedError,

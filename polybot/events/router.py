@@ -1,6 +1,6 @@
 """Маршрутизация событий от движка."""
 
-from maupoly.events import GameEvents
+from maupoly.enums import GameEvents
 from polybot import keyboards, messages
 from polybot.config import sm
 from polybot.events.journal import EventContext, EventRouter

@@ -7,8 +7,7 @@
 from enum import IntEnum
 from typing import TYPE_CHECKING
 
-from maupoly.enums import TurnState
-from maupoly.events import GameEvents
+from maupoly.enums import GameEvents, TurnState
 
 if TYPE_CHECKING:
     from maupoly.game import MonoGame

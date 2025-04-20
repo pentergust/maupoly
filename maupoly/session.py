@@ -8,12 +8,8 @@ from typing import Generic, TypeVar, cast
 
 from loguru import logger
 
-from maupoly.events import (
-    BaseEventHandler,
-    DebugEventHandler,
-    Event,
-    GameEvents,
-)
+from maupoly.enums import GameEvents
+from maupoly.events import BaseEventHandler, DebugEventHandler, Event
 from maupoly.exceptions import LobbyClosedError, NoGameInChatError
 from maupoly.game import MonoGame
 from maupoly.player import BaseUser, Player

@@ -9,7 +9,8 @@ from aiogram import Bot
 from aiogram.types import BufferedInputFile, InlineKeyboardMarkup, Message
 from loguru import logger
 
-from maupoly.events import BaseEventHandler, Event, GameEvents
+from maupoly.enums import GameEvents
+from maupoly.events import BaseEventHandler, Event
 from polybot.boardgen import generate_board
 from polybot.keyboards import TURN_MARKUP
 

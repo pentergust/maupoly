@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING
 
-from maupoly.events import Event, GameEvents
+from maupoly.enums import GameEvents
+from maupoly.events import Event
 from maupoly.field import BaseField
 
 if TYPE_CHECKING:
