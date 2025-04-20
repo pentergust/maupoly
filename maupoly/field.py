@@ -118,13 +118,72 @@ class BuyField(BaseField):
 
     def callback(self, game: "MonoGame", player: "Player") -> None:
         """Оплата или получение монет."""
-        game.player.push_event(
+        if self.is_reward:
+            player.give(self.cost)
+        else:
+            player.pay(self.cost)
+        player.push_event(
             GameEvents.PLAYER_BUY, f"{self.cost} {self.is_reward}"
         )
-        # TODO: Методы игрока для оплаты или покупки
 
 
-class RentField(BaseField):
+class BaseRentField(BaseField):
+    """Базовое поле, которое может купит игрок."""
+
+    def __init__(
+        self,
+        name: str,
+        buy_cost: int,
+        base_rent: int,
+        field_type: FieldType = FieldType.RENT,
+    ) -> None:
+        super().__init__(field_type=field_type, name=name)
+        self.buy_cost = buy_cost
+        self.owner: Player | None = None
+        self.base_rent = base_rent
+
+        # Залог поля
+        self.deposit_cost = buy_cost // 2
+        self.redemption_cost = self.deposit_cost
+        self.is_deposit = False
+
+    def count_rent(self) -> int:
+        """Считает сколько нужно заплатить игроку ренты."""
+        return self.base_rent if not self.is_deposit else 0
+
+    def buy(self, player: "Player") -> None:
+        """Покупает поле."""
+        player.pay(self.buy_cost)
+        self.owner = player
+
+    def deposit(self, player: "Player") -> None:
+        """Закладывает поле."""
+        player.give(self.deposit_cost)
+        self.is_deposit = True
+
+    def redemption(self, player: "Player") -> None:
+        """Выкупает заложенное поле."""
+        player.pay(self.redemption_cost)
+        self.is_deposit = False
+
+    def pay_rent(self, player: "Player") -> None:
+        """Платит ренту владельцу поля."""
+        if self.owner is None:
+            raise ValueError("Field has not owner")
+
+        rent = self.count_rent()
+        player.pay(rent)
+        self.owner.give(rent)
+
+    def callback(self, game: "MonoGame", player: "Player") -> None:
+        """Покупка поля или оплата ренты."""
+        if self.owner is None:
+            game.set_state(TurnState.BYU)
+        else:
+            self.pay_rent(player)
+
+
+class RentField(BaseRentField):
     """Поле ренты.
 
     Сначала пользователь покупает это поле.
@@ -134,29 +193,28 @@ class RentField(BaseField):
     недвижимость.
     """
 
-    def __init__(self, name: str, color: FieldColor) -> None:
-        super().__init__(field_type=FieldType.RENT, name=name)
+    def __init__(
+        self,
+        name: str,
+        color: FieldColor,
+        buy_cost: int,
+        base_rent: int,
+        level_cost: int,
+    ) -> None:
+        super().__init__(
+            name=name,
+            buy_cost=buy_cost,
+            base_rent=base_rent,
+            field_type=FieldType.RENT,
+        )
 
         # Основная характеристика
         self.color = color
-        self.buy_cost = None
-        self.owner = None
-
-        # Уровень поля
         self.level = 0
-        self.level_cost = None
-
-        # Залог поля
-        self.deposit_cost = None
-        self.redemption_cost = None
-        self.is_deposit = False
-
-    def callback(self, game: "MonoGame", player: "Player") -> None:
-        """Покупка поля или оплата ренты."""
-        game.set_state(TurnState.BYU)
+        self.level_cost = level_cost
 
 
-class AirportField(BaseField):
+class AirportField(BaseRentField):
     """Самолёты.
 
     Похоже на обычные поля ренты.
@@ -164,22 +222,16 @@ class AirportField(BaseField):
     Не имеет цвета и возможности строительства.
     """
 
-    def __init__(self, name: str) -> None:
-        super().__init__(field_type=FieldType.AIRPORT, name=name)
-        self.buy_cost = None
-        self.owner = None
-
-        # Залог поля
-        self.deposit_cost = None
-        self.redemption_cost = None
-        self.is_deposit = False
-
-    def callback(self, game: "MonoGame", player: "Player") -> None:
-        """Покупка поля или оплата ренты."""
-        game.set_state(TurnState.BYU)
+    def __init__(self, name: str, buy_cost: int, base_rent: int) -> None:
+        super().__init__(
+            name=name,
+            buy_cost=buy_cost,
+            base_rent=base_rent,
+            field_type=FieldType.AIRPORT,
+        )
 
 
-class CommunicateField(BaseField):
+class CommunicateField(BaseRentField):
     """Коммуникация.
 
     Похоже на обычные поля ренты.
@@ -188,19 +240,13 @@ class CommunicateField(BaseField):
     Не имеет цвета и возможности строительства.
     """
 
-    def __init__(self, name: str) -> None:
-        super().__init__(field_type=FieldType.COMMUNICATE, name=name)
-        self.buy_cost = None
-        self.owner = None
-
-        # Залог поля
-        self.deposit_cost = None
-        self.redemption_cost = None
-        self.is_deposit = False
-
-    def callback(self, game: "MonoGame", player: "Player") -> None:
-        """Покупка поля или оплата ренты."""
-        game.set_state(TurnState.BYU)
+    def __init__(self, name: str, buy_cost: int, base_rent: int) -> None:
+        super().__init__(
+            name=name,
+            buy_cost=buy_cost,
+            base_rent=base_rent,
+            field_type=FieldType.AIRPORT,
+        )
 
 
 class ChanceField(BaseField):
@@ -285,43 +331,199 @@ class CasinoField(BaseField):
 # TODO: Может мы лучше это в класс какой затолкаем?
 CLASSIC_BOARD = [
     BuyField("Старт", 1000, True),
-    RentField("Санкт-Петербург", FieldColor.BROWN),
+    RentField(
+        "Санкт-Петербург",
+        FieldColor.BROWN,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     PrizeField(),
-    RentField("Красноярск", FieldColor.BROWN),
+    RentField(
+        "Красноярск",
+        FieldColor.BROWN,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     BuyField("Подоходный налог", 2000),
-    AirportField("Шереметьево"),
-    RentField("Самара", FieldColor.SKY),
+    AirportField(
+        "Шереметьево",
+        buy_cost=200,
+        base_rent=60,
+    ),
+    RentField(
+        "Самара",
+        FieldColor.SKY,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     ChanceField(),
-    RentField("Чебоксары", FieldColor.SKY),
-    RentField("Пенза", FieldColor.SKY),
+    RentField(
+        "Чебоксары",
+        FieldColor.SKY,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Пенза",
+        FieldColor.SKY,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     PrisonField(),
-    RentField("Челябинск", FieldColor.PURPLE),
-    CommunicateField("Мобильная связь"),
-    RentField("Барнаул", FieldColor.PURPLE),
-    RentField("Псков", FieldColor.PURPLE),
-    AirportField("Толмачёво"),
-    RentField("Батайск", FieldColor.ORANGE),
+    RentField(
+        "Челябинск",
+        FieldColor.PURPLE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    CommunicateField(
+        "Мобильная связь",
+        buy_cost=200,
+        base_rent=60,
+    ),
+    RentField(
+        "Барнаул",
+        FieldColor.PURPLE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Псков",
+        FieldColor.PURPLE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    AirportField(
+        "Толмачёво",
+        buy_cost=200,
+        base_rent=60,
+    ),
+    RentField(
+        "Батайск",
+        FieldColor.ORANGE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     PrizeField(),
-    RentField("Воронеж", FieldColor.ORANGE),
-    RentField("Сыктывкар", FieldColor.ORANGE),
+    RentField(
+        "Воронеж",
+        FieldColor.ORANGE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Сыктывкар",
+        FieldColor.ORANGE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     CasinoField(),
-    RentField("Ростов-на-Дону", FieldColor.RED),
+    RentField(
+        "Ростов-на-Дону",
+        FieldColor.RED,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     ChanceField(),
-    RentField("Рязань", FieldColor.RED),
-    RentField("Москва", FieldColor.RED),
-    AirportField("Пулково"),
-    RentField("Архангельск", FieldColor.YELLOW),
-    RentField("Обнинск", FieldColor.YELLOW),
-    CommunicateField("Интернет"),
-    RentField("Новосибирск", FieldColor.YELLOW),
+    RentField(
+        "Рязань",
+        FieldColor.RED,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Москва",
+        FieldColor.RED,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    AirportField(
+        "Пулково",
+        buy_cost=200,
+        base_rent=60,
+    ),
+    RentField(
+        "Архангельск",
+        FieldColor.YELLOW,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Обнинск",
+        FieldColor.YELLOW,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    CommunicateField(
+        "Интернет",
+        buy_cost=200,
+        base_rent=60,
+    ),
+    RentField(
+        "Новосибирск",
+        FieldColor.YELLOW,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     TeleportField("В тюрьму", to_field=10),
-    RentField("Северодвинск", FieldColor.GREEN),
-    RentField("Курган", FieldColor.GREEN),
+    RentField(
+        "Северодвинск",
+        FieldColor.GREEN,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    RentField(
+        "Курган",
+        FieldColor.GREEN,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     PrizeField(),
-    RentField("Сургут", FieldColor.GREEN),
-    AirportField("Кольцово"),
+    RentField(
+        "Сургут",
+        FieldColor.GREEN,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
+    AirportField(
+        "Кольцово",
+        buy_cost=200,
+        base_rent=60,
+    ),
     ChanceField(),
-    RentField("Пермь", FieldColor.BLUE),
+    RentField(
+        "Пермь",
+        FieldColor.BLUE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
     BuyField("Налог на роскошь", 1000),
-    RentField("Екатеринбург", FieldColor.BLUE),
+    RentField(
+        "Екатеринбург",
+        FieldColor.BLUE,
+        buy_cost=200,
+        base_rent=60,
+        level_cost=100,
+    ),
 ]

@@ -28,6 +28,7 @@ class Player:
         self._user_name = user_name
         self.balance = 15000
         self.index = 0
+        self.own_fields: list[int] = []
 
     @property
     def name(self) -> str:
@@ -53,6 +54,10 @@ class Player:
         """Сокращение для получения поля, на котором стоит игрок."""
         return self.game.fields[self.index]
 
+    def on_leave(self) -> None:
+        """Действия игрока при выходе из игры."""
+        pass
+
     # Магические методы
     # =================
 
@@ -64,13 +69,20 @@ class Player:
         """Представление игрока в строковом виде."""
         return str(self._user_name)
 
-    def __eq__(self, other_player: Self) -> bool:
+    def __eq__(self, other_player: object) -> bool:
         """Сравнивает двух игроков по UID пользователя."""
+        if not isinstance(other_player, Player):
+            raise ValueError("Other player muse be Player instance")
         return self.user_id == other_player.user_id
 
-    def __ne__(self, other_player: Self) -> bool:
+    def __ne__(self, other_player: object) -> bool:
         """Проверяет что игроки не совпадают."""
+        if not isinstance(other_player, Player):
+            raise ValueError("Other player muse be Player instance")
         return self.user_id != other_player.user_id
+
+    # Перемещение игрока
+    # ==================
 
     def move(self, steps: int) -> None:
         """Перемещает игрока на N клеток по полю."""
@@ -81,3 +93,19 @@ class Player:
         """Перемещает игрока на конкретное поле."""
         self.push_event(GameEvents.PLAYER_MOVE, str(index))
         self.index = index % len(self.game.fields)
+
+    # Оплата услуг
+    # ============
+
+    def pay(self, amount: int) -> None:
+        """Оплачивает услуги за монеты."""
+        if amount > self.balance:
+            self.balance = 0
+            self.game.remove_player(self)
+            return
+
+        self.balance -= amount
+
+    def give(self, amount: int) -> None:
+        """Выплачивает монеты пользователю."""
+        self.balance += amount

@@ -142,8 +142,7 @@ class MonoGame:
             self.bankrupts.append(player)
             self.push_event(player, GameEvents.GAME_LEAVE, "lose")
 
-        # TODO: Хук на выход из игры
-        # player.on_leave()
+        player.on_leave()
         self.players.remove(player)
 
         if len(self.players) <= 1:
