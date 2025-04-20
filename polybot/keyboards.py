@@ -1,6 +1,8 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+from maupoly.field import BaseRentField
 from maupoly.game import MonoGame
+from maupoly.player import Player
 
 TURN_MARKUP = InlineKeyboardMarkup(
     inline_keyboard=[
@@ -24,3 +26,20 @@ def get_room_markup(game: MonoGame) -> InlineKeyboardMarkup:
         )
 
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
+def get_buy_field_markup(player: Player) -> InlineKeyboardMarkup:
+    """Клавиатура для покупки поля."""
+    buttons = [
+        InlineKeyboardButton(text="👋 Отказаться", callback_data="next"),
+    ]
+
+    if (
+        isinstance(player.field, BaseRentField)
+        and player.balance > player.field.buy_cost
+    ):
+        buttons.append(
+            InlineKeyboardButton(text="💸 Купить", callback_data="buy_field"),
+        )
+
+    return InlineKeyboardMarkup(inline_keyboard=[buttons])

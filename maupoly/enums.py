@@ -20,7 +20,7 @@ class TurnState(StrEnum):
 
     NEXT = "next"
     CONTRACT = "contract"
-    BYU = "byu"
+    BYU = "buy"
 
 
 class GameEvents(StrEnum):
@@ -47,6 +47,7 @@ class GameEvents(StrEnum):
     - player_dice: Был выброшен кубик с некоторым числом.
     - player_move: Перемещение игрока по полю.
     - player_buy: Игрок оплатил налог или получил возмещение.
+    - player_buy_field: Игрок купил новое поле.
     - player_chance: Игрок попал на поле шанс.
     - player_prison: Игрок попал в тюрьму.
     - player_casino: Игрок попал на поле казино.
@@ -71,6 +72,7 @@ class GameEvents(StrEnum):
     PLAYER_DICE = "player_dice"
     PLAYER_MOVE = "player_move"
     PLAYER_BUY = "player_buy"
+    PLAYER_BUY_FIELD = "player_buy_field"
     PLAYER_CHANCE = "player_chance"
     PLAYER_PRISON = "player_prison"
     PLAYER_CASINO = "player_casino"

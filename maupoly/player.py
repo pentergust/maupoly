@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from maupoly.enums import GameEvents
 from maupoly.events import Event
-from maupoly.field import BaseField
+from maupoly.field import BaseField, BaseRentField
 
 if TYPE_CHECKING:
     from maupoly.game import MonoGame
@@ -29,7 +29,7 @@ class Player:
         self._user_name = user_name
         self.balance = 15000
         self.index = 0
-        self.own_fields: list[int] = []
+        self.own_fields: list[BaseRentField] = []
 
     @property
     def name(self) -> str:
@@ -51,7 +51,7 @@ class Player:
         )
 
     @property
-    def field(self) -> BaseField:
+    def field(self) -> BaseField | BaseRentField:
         """Сокращение для получения поля, на котором стоит игрок."""
         return self.game.fields[self.index]
 
@@ -110,3 +110,15 @@ class Player:
     def give(self, amount: int) -> None:
         """Выплачивает монеты пользователю."""
         self.balance += amount
+
+    # Управление полями
+    # =================
+
+    def buy_field(self) -> None:
+        """Покупает активное поле."""
+        if not isinstance(self.field, BaseRentField):
+            raise ValueError(f"Can`t buy {type(self.field)} field")
+        self.field.buy(self)
+        self.own_fields.append(self.field)
+        self.push_event(GameEvents.PLAYER_BUY_FIELD, str(self.field.buy_cost))
+        self.game.next_turn()

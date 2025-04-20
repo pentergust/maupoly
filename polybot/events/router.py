@@ -108,8 +108,12 @@ async def next_turn(ctx: EventContext) -> None:
 @er.handler(event=GameEvents.GAME_STATE)
 async def new_game_state(ctx: EventContext) -> None:
     """Изменение игрового состояния."""
-    ctx.add(f"⚙️ Новое состояние: {ctx.event.data}")
-    ctx.set_markup(keyboards.NEXT_MARKUP)
+    if ctx.event.data == "buy":
+        ctx.add(f"👀 {ctx.event.player.name} задумывается о покупке.")
+        ctx.set_markup(keyboards.get_buy_field_markup(ctx.event.player))
+    else:
+        ctx.add(f"⚙️ Новое состояние: {ctx.event.data}")
+        ctx.set_markup(keyboards.NEXT_MARKUP)
     await ctx.send()
 
 
@@ -131,7 +135,7 @@ async def move_player(ctx: EventContext) -> None:
 
 
 @er.handler(event=GameEvents.PLAYER_BUY)
-async def byu_field(ctx: EventContext) -> None:
+async def pay_field(ctx: EventContext) -> None:
     """Когда пользователь попал на поле, которое можно купить."""
     cost, is_reward = ctx.event.data.split()
     if is_reward == "true":
@@ -140,6 +144,12 @@ async def byu_field(ctx: EventContext) -> None:
         ctx.add(f"💸 {ctx.event.player.name} должен заплатить {cost}")
     ctx.set_markup(keyboards.NEXT_MARKUP)
     await ctx.send()
+
+
+@er.handler(event=GameEvents.PLAYER_BUY_FIELD)
+async def byu_field(ctx: EventContext) -> None:
+    """Когда игрок купил поле."""
+    ctx.add(f"💸 {ctx.event.player.name} покупает поле.")
 
 
 @er.handler(event=GameEvents.PLAYER_CHANCE)
