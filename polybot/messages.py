@@ -6,6 +6,7 @@
 from datetime import datetime
 
 from maupoly import exceptions
+from maupoly.field import BaseField, BaseRentField, FieldType
 from maupoly.game import MonoGame
 
 # Статические сообщения
@@ -170,10 +171,28 @@ def end_game_message(game: MonoGame) -> str:
     Отображает список победителей текущей комнаты и проигравших.
     Ну и полезные команды, если будет нужно создать новую игру.
     """
-    res = f"✨ <b>Игра завершена</b>!\n👑 Монополист: {game.winner.name}\n"
+    if game.winner is None:
+        res = "✨ <b>Игра завершена</b>!\n👑 Победителей нет\n"
+    else:
+        res = f"✨ <b>Игра завершена</b>!\n👑 Монополист: {game.winner.name}\n"
     res += "\n🪙 Банкроты:\n"
     for i, loser in enumerate(game.bankrupts):
         res += f"{i + 1}. {loser.name}\n"
 
     res += "\n🍰 /game - чтобы создать новую комнату!"
+    return res
+
+
+# Описание ячеек
+# =============
+
+
+def field_status(field: BaseField | BaseRentField) -> str:
+    """Краткая информация о поле."""
+    res = f"{field.type.symbol}<b>{field.name}</b>"
+    if isinstance(field, BaseRentField):
+        if field.owner is not None:
+            res += f" {field.owner.name} {field.count_rent()}💸"
+        else:
+            res += f" цена {field.buy_cost}💸"
     return res

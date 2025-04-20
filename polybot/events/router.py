@@ -126,7 +126,8 @@ async def roll_dice(ctx: EventContext) -> None:
 @er.handler(event=GameEvents.PLAYER_MOVE)
 async def move_player(ctx: EventContext) -> None:
     """Когда игрок перемещается по полю."""
-    ctx.add(f"🧭 Вы попали на поле {ctx.event.player.field.name}!")
+    field_status = messages.field_status(ctx.event.player.field)
+    ctx.add(f"🧭 Вы попали на поле {field_status}!")
 
 
 @er.handler(event=GameEvents.PLAYER_BUY)

@@ -17,6 +17,9 @@ if TYPE_CHECKING:
 # ===============================
 
 
+_FIELD_TYPES = ("💸", "✨", "✈️", "📱", "❓", "💎", "🌀", "👮", "🎰")
+
+
 class FieldType(IntEnum):
     """Типы ячеек.
 
@@ -41,6 +44,14 @@ class FieldType(IntEnum):
     PRISON = 7
     CASINO = 8
 
+    @property
+    def symbol(self) -> str:
+        """Представление перечисления в виде смайлика."""
+        return _FIELD_TYPES[self.value]
+
+
+_FIELD_COLORS = ("🟤", "⚪", "🟣", "🟠", "🔴", "🟡", "🟢", "🔵")
+
 
 class FieldColor(IntEnum):
     """Цвета для полей ренты."""
@@ -53,6 +64,11 @@ class FieldColor(IntEnum):
     YELLOW = 5
     GREEN = 5
     BLUE = 6
+
+    @property
+    def symbol(self) -> str:
+        """Представление перечисления в виде смайлика."""
+        return _FIELD_COLORS[self.value]
 
 
 # Игровые поля
